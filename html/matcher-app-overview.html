@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>DreamHub Mattress Matcher — High-Level Overview</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<style>
+  :root {
+    --bg-primary: #f4f3ee;
+    --bg-secondary: #eeede6;
+    --bg-tertiary: #e8e6dc;
+    --bg-inverse: #191817;
+    --text-primary: #191817;
+    --text-secondary: #5a554e;
+    --text-muted: #8a847a;
+    --accent: #c96442;
+    --accent-hover: #b55738;
+    --accent-soft: #e89268;
+    --border: #d8d3c8;
+    --border-strong: #c4bfb2;
+    --success: #6b7a3d;
+    --warning: #c98a42;
+    --danger: #a53e2a;
+    --sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+    --mono: 'JetBrains Mono', 'SF Mono', Menlo, monospace;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font: 400 17px/1.6 var(--sans);
+    color: var(--text-primary);
+    background: var(--bg-primary);
+    text-wrap: pretty;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page { max-width: 1180px; margin: 0 auto; padding: 64px 48px 96px; }
+
+  /* Masthead */
+  .masthead { border-bottom: 1px solid var(--border); padding-bottom: 48px; margin-bottom: 56px; }
+  .eyebrow { font: 500 12px/1 var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); margin: 0 0 24px; }
+  .title { font: 600 50px/1.1 var(--sans); letter-spacing: -0.02em; margin: 0 0 20px; text-wrap: balance; }
+  .deck { font: 400 italic 21px/1.45 var(--sans); color: var(--text-secondary); max-width: 680px; margin: 0 0 40px; text-wrap: pretty; }
+  .byline { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; padding-top: 24px; border-top: 1px solid var(--border); }
+  .byline-item { font-size: 14px; color: var(--text-secondary); }
+  .byline-item strong { display: block; font: 500 11px/1 var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px; }
+
+  /* Layout */
+  .layout { display: grid; grid-template-columns: 220px 1fr; gap: 64px; align-items: start; }
+  .toc { position: sticky; top: 32px; }
+  .toc-label { font: 500 11px/1 var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); margin: 0 0 16px; }
+  .toc ol { list-style: none; margin: 0; padding: 0; counter-reset: toc; }
+  .toc li { counter-increment: toc; margin: 0 0 10px; font-size: 14px; }
+  .toc li::before { content: counter(toc, decimal-leading-zero); font: 500 11px/1 var(--mono); color: var(--accent); margin-right: 10px; }
+  .toc a { color: var(--text-primary); text-decoration: none; border-bottom: 1px solid transparent; }
+  .toc a:hover { border-bottom-color: var(--accent); }
+
+  /* Article */
+  article { min-width: 0; max-width: 760px; }
+  .article-intro { font: 400 italic 19px/1.5 var(--sans); color: var(--text-secondary); margin: 0 0 56px; max-width: 640px; }
+  article > section { margin-bottom: 80px; scroll-margin-top: 32px; }
+  article h2 { font: 600 32px/1.2 var(--sans); letter-spacing: -0.015em; margin: 0 0 24px; text-wrap: balance; }
+  article h3 { font: 600 21px/1.3 var(--sans); letter-spacing: -0.01em; margin: 40px 0 14px; }
+  article h4 { font: 500 13px/1.4 var(--sans); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-secondary); margin: 28px 0 12px; }
+  article p { margin: 0 0 18px; }
+  .section-num { font: 500 12px/1 var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); display: block; margin-bottom: 10px; }
+  .lede { font: 400 italic 19px/1.5 var(--sans); color: var(--text-secondary); margin: 0 0 28px; max-width: 640px; }
+
+  a { color: var(--accent); text-decoration: none; border-bottom: 1px solid transparent; }
+  a:hover { border-bottom-color: var(--accent); }
+  strong { font-weight: 600; }
+
+  /* Inline code */
+  code { font: 500 0.92em var(--mono); background: var(--bg-secondary); padding: 2px 6px; border-radius: 4px; color: var(--text-primary); }
+
+  /* Blockquote */
+  blockquote {
+    font: 400 italic 19px/1.5 var(--sans);
+    border-left: 3px solid var(--accent);
+    padding-left: 22px;
+    margin: 28px 0;
+    color: var(--text-secondary);
+    max-width: 640px;
+  }
+
+  /* Lists */
+  ol, ul { padding-left: 22px; margin: 0 0 22px; }
+  ol li, ul li { margin-bottom: 8px; }
+  li::marker { color: var(--accent); }
+
+  /* Tables */
+  .table-wrap { margin: 0 0 28px; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+  table { width: 100%; border-collapse: collapse; font-size: 15px; }
+  thead th {
+    font: 500 11px/1 var(--mono); letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--text-secondary); text-align: left;
+    padding: 14px 18px; background: var(--bg-secondary); border-bottom: 1px solid var(--border);
+  }
+  tbody td { padding: 14px 18px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:nth-child(even) td { background: var(--bg-secondary); }
+  tbody td code { font-size: 13px; }
+
+  /* Aside */
+  .aside { background: var(--bg-inverse); color: #ece9e1; padding: 32px 36px; border-radius: 8px; margin: 36px 0; }
+  .aside h3 { color: #f4f3ee; margin: 0 0 12px; font: 600 19px/1.3 var(--sans); }
+  .aside p { color: #c8c3b8; margin: 0 0 10px; font-size: 15px; }
+  .aside p:last-child { margin-bottom: 0; }
+  .aside code { background: rgba(255,255,255,0.08); color: #f4f3ee; }
+
+  /* Diagrams */
+  .diagram {
+    position: relative;
+    margin: 32px 0 40px;
+    padding: 32px;
+    background: var(--bg-secondary);
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    overflow-x: auto;
+  }
+  .diagram .mermaid { background: transparent; text-align: center; }
+  .diagram-caption {
+    font: 500 12px/1 var(--mono);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-top: 16px;
+    text-align: center;
+  }
+
+  .diagram-enlarge {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    background: var(--bg-primary);
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+    font: 500 11px/1 var(--sans);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 140ms ease;
+    z-index: 2;
+  }
+  .diagram-enlarge:hover {
+    background: var(--accent);
+    color: var(--bg-primary);
+    border-color: var(--accent);
+  }
+  .diagram-enlarge svg {
+    width: 12px;
+    height: 12px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 2;
+  }
+
+  /* Lightbox */
+  .lightbox {
+    position: fixed;
+    inset: 0;
+    background: rgba(25, 24, 23, 0.88);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 48px;
+    z-index: 1000;
+    opacity: 0;
+    transition: opacity 180ms ease;
+  }
+  .lightbox.open { display: flex; opacity: 1; }
+  .lightbox-content {
+    background: var(--bg-primary);
+    border-radius: 8px;
+    width: min(95vw, 1400px);
+    max-height: 92vh;
+    padding: 56px 48px 48px;
+    overflow: auto;
+    position: relative;
+    box-shadow: 0 8px 24px rgba(25, 24, 23, 0.3);
+  }
+  .lightbox-body {
+    width: 100%;
+    overflow: auto;
+    max-height: 85vh;
+  }
+  .lightbox-body svg { display: block; margin: 0 auto; }
+  .lightbox-close {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    background: transparent;
+    border: 1px solid var(--border);
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-secondary);
+    font-size: 20px;
+    line-height: 1;
+    transition: all 140ms ease;
+    font-family: var(--sans);
+  }
+  .lightbox-close:hover {
+    background: var(--accent);
+    color: var(--bg-primary);
+    border-color: var(--accent);
+  }
+  body.lightbox-open { overflow: hidden; }
+
+  /* Footer */
+  footer { margin-top: 96px; padding-top: 32px; border-top: 1px solid var(--border); font-size: 13px; color: var(--text-muted); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 16px; }
+  footer strong { color: var(--text-secondary); font-weight: 500; }
+
+  /* Responsive */
+  @media (max-width: 900px) {
+    .page { padding: 40px 24px 64px; }
+    .title { font-size: 36px; }
+    .layout { grid-template-columns: 1fr; gap: 40px; }
+    .toc { position: static; }
+    .byline { grid-template-columns: 1fr 1fr; }
+    article { max-width: none; }
+    body { font-size: 18px; }
+    .lightbox { padding: 16px; }
+    .lightbox-content { padding: 48px 20px 24px; }
+    .diagram-enlarge { top: 10px; right: 10px; padding: 5px 10px; font-size: 10px; }
+  }
+  @media (max-width: 640px) {
+    .byline { grid-template-columns: 1fr; }
+    .title { font-size: 32px; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="masthead">
+    <p class="eyebrow">DreamHub · Product overview</p>
+    <h1 class="title">DreamHub Mattress Matcher</h1>
+    <p class="deck">An in-store quiz and recommendations experience that helps Sleep Experts guide customers to ranked mattress and foundation pairings — with pricing, financing, delivery, and add-to-cart.</p>
+    <div class="byline">
+      <div class="byline-item"><strong>Audience</strong>Product owners, QA, engineers</div>
+      <div class="byline-item"><strong>Scope</strong>Matcher master app (~2,166 files)</div>
+      <div class="byline-item"><strong>Validated</strong>2026-06-04 (prod UX)</div>
+      <div class="byline-item"><strong>Code sync</strong>Repomix 2026-06-25</div>
+    </div>
+  </header>
+
+  <div class="layout">
+
+    <nav class="toc">
+      <p class="toc-label">Contents</p>
+      <ol>
+        <li><a href="#what-app-does">What the app does</a></li>
+        <li><a href="#technical-stack">Technical stack</a></li>
+        <li><a href="#system-architecture">System architecture</a></li>
+        <li><a href="#primary-user-flow">Quiz → Matches flow</a></li>
+        <li><a href="#quiz-data-contract">Quiz data contract</a></li>
+        <li><a href="#results-matches">Results / matches</a></li>
+        <li><a href="#api-surface">API surface</a></li>
+        <li><a href="#state-management">State management</a></li>
+        <li><a href="#new-vs-legacy">New vs legacy</a></li>
+        <li><a href="#context-file-map">Context file map</a></li>
+        <li><a href="#live-validation">Live validation</a></li>
+        <li><a href="#repomix-sync">Repomix sync</a></li>
+        <li><a href="#documentation-gaps">Documentation gaps</a></li>
+      </ol>
+    </nav>
+
+    <article>
+
+      <p class="article-intro">This repo (<a href="../../README.md">README</a>) is a <strong>knowledge hub</strong>, not the app itself. The overview below mirrors the <strong>Matcher master app repo</strong> (~2,166 files, Next.js at <code>/mattressmatcher</code>).</p>
+
+      <section id="what-app-does">
+        <h2><span class="section-num">§ 01 — Overview</span>What the app does</h2>
+        <p>The <strong>DreamHub Mattress Matcher</strong> (also called <strong>DH Shop New Matcher</strong>) is an in-store tool used by <strong>Sleep Experts</strong> to guide a customer through a mattress-finding quiz and show ranked product matches — mattresses paired with foundations — with pricing, financing, delivery, and add-to-cart.</p>
+        <p>The new experience replaces a legacy multi-page quiz (<code>Get Started</code> → separate question pages) with a <strong>single-page quiz</strong> gated by Q1. Legacy paths still exist behind flags and in <a href="../../context/07-legacy-low-priority.md">context/07-legacy-low-priority.md</a>; new work should target the DH Shop flow only.</p>
+      </section>
+
+      <section id="technical-stack">
+        <h2><span class="section-num">§ 02 — Stack</span>Technical stack (what kind of app it is)</h2>
+        <p class="lede">This is not a standalone SPA — it is a Next.js React application embedded in the DreamHub / Unify in-store Sleep Expert shell.</p>
+        <p>This is <strong>not a standalone SPA</strong>. It is a <strong>Next.js (Pages Router) React application</strong> served at the <code>/mattressmatcher</code> path, embedded in the <strong>DreamHub / Unify</strong> in-store Sleep Expert shell. Pages use <strong>server-side rendering (SSR)</strong> for the initial load, then behave as a <strong>client-heavy interactive app</strong> for quiz navigation, API calls, and results interactions.</p>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Layer</th><th>Technology</th><th>Notes</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><strong>Framework</strong></td><td>Next.js (Pages Router)</td><td><code>src/pages/index.tsx</code>, <code>src/pages/results.tsx</code>, <code>src/pages/api/*</code>; <code>getServerSideProps</code> piped SSR on entry and results</td></tr>
+              <tr><td><strong>UI library</strong></td><td>React 18 + TypeScript</td><td>Functional components, hooks, context providers</td></tr>
+              <tr><td><strong>Shared UI kit</strong></td><td><code>@mfrm/mfcl</code></td><td>Mattress Firm Component Library — Button, Checkbox, Drawer, Modal, Typography, Tooltip, Icons; shared conventions, cart types, and <code>useStorage</code></td></tr>
+              <tr><td><strong>Design assets</strong></td><td><code>@mfrm/design-library</code></td><td>Illustrations and icons used in quiz option config</td></tr>
+              <tr><td><strong>Styling</strong></td><td>SCSS modules</td><td><code>*.module.scss</code> co-located with components</td></tr>
+              <tr><td><strong>Client state</strong></td><td>React Context + hooks</td><td><code>dreamhub-quiz</code>, <code>dreamhub-navigation</code>, <code>global</code>, <code>cart</code>, etc.; session storage for quiz/tab persistence</td></tr>
+              <tr><td><strong>Server/API</strong></td><td>Next.js API routes (BFF)</td><td>Proxies to recommender, D365, Mulesoft; keeps secrets server-side</td></tr>
+              <tr><td><strong>Typed RPC</strong></td><td>tRPC via <code>@mfrm/mfcl/trpc</code></td><td><code>/api/trpc</code> — favorites, Unify session/events, Salesforce, employee search</td></tr>
+              <tr><td><strong>HTTP client</strong></td><td>axios</td><td>Client-side matcher calls and server-side upstream requests</td></tr>
+              <tr><td><strong>Config &amp; flags</strong></td><td>Azure App Config</td><td>SSR-loaded <code>appConfig</code> — quiz configuration, feature flags (<code>isNewMatcherEnabled</code>), <code>financingTiers</code>, API timeouts</td></tr>
+              <tr><td><strong>Observability</strong></td><td>Datadog RUM</td><td>Client-side error/logging via <code>rumLogger</code></td></tr>
+              <tr><td><strong>Analytics</strong></td><td>Tealium</td><td>Session/visitor IDs captured in server logs and analytics context</td></tr>
+              <tr><td><strong>Commerce backend</strong></td><td>D365</td><td>Cart (<code>cartManagement</code>), ATP delivery dates (<code>atpCache</code>)</td></tr>
+              <tr><td><strong>Integration bus</strong></td><td>Mulesoft</td><td>Customer profiles, favorites, Unify store/session APIs</td></tr>
+              <tr><td><strong>Testing</strong></td><td>Jest + React Testing Library</td><td>Unit/component tests in-repo; legacy Cypress suite being retired</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p><strong>Deployment shape:</strong> In production, Matcher runs at <strong><code>https://dreamhub.mattressfirm.com/mattressmatcher</code></strong> (DreamHub subdomain — not the legacy <code>www.mattressfirm.com/mattressmatcher</code> Cypress base URLs). Visiting the DreamHub root auto-redirects to Matcher with query params: <code>StoreNumber</code>, <code>SleepExpertID</code>, <code>UnifySessionID</code>. Authentication is <strong>Azure AD / MSAL</strong> (Microsoft login). It shares types, storage keys, and cart conventions with the broader Unify/DreamHub ecosystem via <strong>MFCL</strong>, rather than owning those contracts locally.</p>
+        <p><strong>New vs old UI code:</strong> The DH Shop experience adds <code>NewDreamhubMatcher</code> and <code>NewDreamhubNavigation</code> component trees alongside the existing <code>Results/</code> and <code>HomeLayout/</code> modules — both coexist during the migration, gated by <code>isNewMatcherEnabled</code>.</p>
+      </section>
+
+      <section id="system-architecture">
+        <h2><span class="section-num">§ 03 — Architecture</span>System architecture (modules)</h2>
+
+        <div class="diagram">
+          <div class="mermaid">
+flowchart TB
+  subgraph client [Browser — Sleep Expert UI]
+    IndexPage["index.tsx / MatcherGateway"]
+    QuizUI["Single-page Quiz"]
+    NavTabs["Header tabs + navigation"]
+    ResultsUI["Results / Matches view"]
+    IndexPage --> QuizUI
+    QuizUI --> NavTabs
+    QuizUI -->|"View Matches!"| ResultsUI
+  end
+
+  subgraph bff [Next.js BFF — src/pages/api]
+    MatchesAPI["/api/matches V2"]
+    LegacyAPI["/api/recommendedProducts V1"]
+    CartAPI["/api/cartManagement"]
+    AtpAPI["/api/atpCache"]
+    TrpcAPI["/api/trpc"]
+  end
+
+  subgraph external [External services]
+    Recommender["Matches / Recommender API"]
+    D365["D365 Cart + ATP"]
+    Mulesoft["Mulesoft — profiles, favorites, unify"]
+    Azure["Azure Spring — promos, x-ray assets"]
+  end
+
+  QuizUI -->|"formatNewRecommendationsPayload"| MatchesAPI
+  MatchesAPI --> Recommender
+  ResultsUI --> CartAPI --> D365
+  ResultsUI --> AtpAPI --> D365
+  ResultsUI --> TrpcAPI --> Mulesoft
+  ResultsUI --> TrpcAPI --> Azure
+          </div>
+          <p class="diagram-caption">Figure 1 — Matcher client, BFF, and external services</p>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Module / domain</th><th>Location</th><th>Product purpose</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><strong>Entry &amp; routing</strong></td><td><a href="../../context/01-quiz-flow.md">context/01-quiz-flow.md</a>, <code>MatcherGateway</code></td><td>Home/entry; decides which matcher experience to show</td></tr>
+              <tr><td><strong>Quiz experience</strong></td><td><code>src/contexts/dreamhub-quiz/</code>, <code>src/types/dreamhub-quiz.ts</code></td><td>Single-page quiz state, journeys, answer persistence</td></tr>
+              <tr><td><strong>Navigation</strong></td><td><code>src/contexts/dreamhub-navigation/</code>, <code>NewDreamhubNavigation</code></td><td>Header tabs (quiz sections, matches, search, PDP)</td></tr>
+              <tr><td><strong>Matcher pipeline</strong></td><td><code>src/utils/matches/*</code></td><td>Translate quiz answers → API payload; API response → match cards</td></tr>
+              <tr><td><strong>Results UI</strong></td><td><a href="../../context/02-results-page.md">context/02-results-page.md</a>, <code>NewDreamhubMatcher</code></td><td>Match pairings (new) + category PLPs (legacy <code>Results/</code> components)</td></tr>
+              <tr><td><strong>BFF APIs</strong></td><td><a href="../../context/03-matcher-logic-and-api.md">context/03-matcher-logic-and-api.md</a></td><td>Server-side proxy to recommender, cart, ATP, profiles</td></tr>
+              <tr><td><strong>Global state</strong></td><td><a href="../../context/05-state-and-context.md">context/05-state-and-context.md</a></td><td>Cart, zip, analytics, accessories, ATP cache, Unify</td></tr>
+              <tr><td><strong>Data types</strong></td><td><a href="../../context/04-product-data-model.md">context/04-product-data-model.md</a></td><td>Contracts for products, matches, cart, quiz config</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p><strong>Feature flag:</strong> <code>isNewMatcherEnabled</code> gates the new DH Shop experience vs legacy Results/PLP paths.</p>
+      </section>
+
+      <section id="primary-user-flow">
+        <h2><span class="section-num">§ 04 — User flow</span>Primary user flow: Quiz → Matches</h2>
+
+        <h3>Feature: Mattress Matcher Quiz → Recommendations</h3>
+        <p class="lede">A Sleep Expert walks the customer through a progressive quiz. Before Q1 is answered, a guidance message is shown and progress tabs are hidden. Answering Q1 reveals the remaining questions on the same scrollable page and activates header progress tabs.</p>
+        <p><strong>High-level summary:</strong> When all required questions are answered (<code>6/6 Answered</code> on Primary), <strong>View Matches!</strong> calls the Matches API and renders top mattress + foundation pairings.</p>
+
+        <h4>Step-by-step flow</h4>
+        <ol>
+          <li><strong>Land on DreamHub / Matcher</strong> — Authenticated session at <a href="https://dreamhub.mattressfirm.com/">dreamhub.mattressfirm.com</a> redirects to <code>/mattressmatcher?StoreNumber=…&amp;SleepExpertID=…&amp;UnifySessionID=…</code>. Matcher loads inside the DreamHub shell (left nav, search bar, store badge).</li>
+          <li><strong>Start quiz</strong> — Welcome: <strong>"Welcome to MattressMatcher!"</strong> plus <em>"Let's help your customer sleep well to live well!"</em> and <em>"Tell us about their needs, and we'll curate the perfect selection together."</em> Q1: <strong>"What brings them in today?"</strong> Before Q1 is answered, guidance reads: <em>"Select an answer above to reveal the rest of the questions."</em></li>
+          <li><strong>Choose journey (Q1)</strong> — Answer determines one of three journeys:
+            <ul>
+              <li><strong>Primary</strong> (<code>standard</code>): multi-select among <code>Bed upgrade</code> / <code>Better sleep</code> / <code>Alleviate pain</code> → 6 progress tabs (why shop → disruptors → size → position → comfort → budget)</li>
+              <li><strong>Guest</strong> (<code>guest</code>): <code>Guest bed</code> → 4 tabs (why shop → size → comfort → budget)</li>
+              <li><strong>Child</strong> (<code>child</code>): <code>Child's bed</code> → 4 tabs; King sizes excluded</li>
+            </ul>
+          </li>
+          <li><strong>Answer questions</strong> — After Q1, <strong>progress tabs appear</strong> and <strong>all remaining questions become visible</strong> on one scrollable page (guidance heading disappears). Each question shows an <strong>"Example:"</strong> coaching prompt for the Sleep Expert; some include <strong>View More</strong>. Footer shows <strong><code>N/6 Answered</code></strong> progress on Primary. Answers persist in session storage.</li>
+          <li><strong>Submit</strong> — <strong>View Matches!</strong> enables at <code>6/6 Answered</code> (no separate Next button).</li>
+          <li><strong>Resolve init action</strong> — On Matches tab mount, <code>resolveMatchesInitAction</code> picks one path (mount-only; tab switches do not re-run):
+            <ul>
+              <li><strong><code>profile-preload</code></strong> — First View Matcher entry with a prior customer-profile recommender log → hydrate from profile cache, no network</li>
+              <li><strong><code>restore-cache</code></strong> — Session has <code>recommenderLogId</code> and quiz was not just re-submitted → restore from session, no network</li>
+              <li><strong><code>fetch</code></strong> — Fresh quiz submit or no cache/preload → proceed to API</li>
+            </ul>
+          </li>
+          <li><strong>Build API payload</strong> — On <code>fetch</code> path only: <code>formatNewRecommendationsPayload()</code> maps quiz answers to <code>MatchesRecommendationsPayload</code>.</li>
+          <li><strong>Fetch matches</strong> — Client POST to <code>/mattressmatcher/api/matches</code>.</li>
+          <li><strong>Server processing</strong> — <code>/api/matches</code> → external Matches API (V2) + foundation accessory mappings.</li>
+          <li><strong>Map to UI</strong> — <code>mapNewQuizResponseToMatches()</code> → top 3 mattress + base pairings with why-it-works, financing, delivery.</li>
+          <li><strong>Show matches</strong> — Header tabs switch to <strong>post-quiz mode</strong>: <code>matcher quiz</code> | <code>matches</code> | <code>mattresses</code> | <code>foundations</code> | <code>bedding</code>. Matches tab shows <strong>"your customer's Top Matches"</strong>, a <strong>Matcher Summary</strong> narrative, 3 pairings with <strong>Add Both To Cart</strong>, <strong>Pair &amp; save</strong> financing (via <code>useFinancingOffer</code> + config tiers), optional <strong>try-in-store</strong> toggle, and <strong>View All Mattress/Foundation Matches</strong> links.</li>
+        </ol>
+
+        <div class="diagram">
+          <div class="mermaid">
+sequenceDiagram
+  participant SE as SleepExpert
+  participant Quiz as DreamhubQuiz
+  participant Init as resolveMatchesInitAction
+  participant Payload as formatNewRecommendationsPayload
+  participant BFF as api/matches
+  participant Rec as MatchesAPI_V2
+  participant Mapper as mapNewQuizResponseToMatches
+  participant UI as ResultsView
+
+  SE->>Quiz: Answer questions
+  SE->>Quiz: Click View Matches
+  Quiz->>Init: Mount Matches tab
+  alt profile-preload or restore-cache
+    Init->>UI: Hydrate from profile or session
+  else fetch fresh
+    Init->>Payload: QuizAnswersInput
+    Payload->>BFF: MatchesRecommendationsPayload
+    BFF->>Rec: POST recommendations
+    Rec-->>BFF: recommendedProducts + recommenderLogId
+    BFF->>BFF: Accessory foundation mappings
+    BFF-->>Mapper: Products + mappings
+    Mapper-->>UI: MatchesRecommendationPairing[]
+  end
+  UI->>SE: Top 3 mattress+base matches
+          </div>
+        </div>
+
+        <h4>System components used</h4>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Component</th><th>Role</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>dreamhub-quiz</code> context</td><td>Quiz answers, active journey, completion state</td></tr>
+              <tr><td><code>dreamhub-navigation</code> context</td><td>Active header tab, quiz vs non-quiz modes</td></tr>
+              <tr><td><code>resolveMatchesInitAction</code></td><td>Decides profile-preload, cache restore, or fresh fetch on Matches tab mount</td></tr>
+              <tr><td><code>formatNewRecommendationsPayload</code></td><td>Quiz → API contract translation</td></tr>
+              <tr><td><code>/api/matches</code></td><td>BFF for V2 recommender + foundation mapping</td></tr>
+              <tr><td><code>mapNewQuizResponseToMatches</code></td><td>API products → match cards with reasons/pricing</td></tr>
+              <tr><td><code>useFinancingOffer</code></td><td>Client-side monthly payment copy from <code>appConfig.financingTiers</code> (no API)</td></tr>
+              <tr><td><code>getNewQuizRecommendedProductsClientSide</code></td><td>Client-side fetch + 1hr memory cache</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h4>Dependencies &amp; blockers</h4>
+        <ul>
+          <li>External <strong>Matches/Recommender API</strong> must accept payload with valid <code>customerResponses.mattressSize</code> (422 if missing)</li>
+          <li><strong>Store number</strong>, <strong>zip code</strong>, and <strong>accessory size mappings</strong> needed for correct variant/pricing</li>
+          <li><strong>Azure App Config</strong> provides <code>dreamHubQuizConfiguration</code> and feature flags</li>
+          <li>Session storage must be available for answer persistence across refreshes</li>
+        </ul>
+      </section>
+
+      <section id="quiz-data-contract">
+        <h2><span class="section-num">§ 05 — Data contract</span>Quiz data contract</h2>
+        <p>Answers are stored as <code>Record&lt;string, string[]&gt;</code> using keys from <a href="../../context/01-quiz-flow.md">dreamhub-quiz.ts</a>:</p>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Key</th><th>Example stored values</th><th>UI labels (click targets)</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>why-shop</code></td><td><code>bed-upgrade</code>, <code>guest-bed</code>, <code>childs-bed</code></td><td>Bed upgrade, Guest bed, Child's bed</td></tr>
+              <tr><td><code>disruptors</code></td><td><code>temperature</code>, <code>pain</code></td><td>Temperature, Pain, etc.</td></tr>
+              <tr><td><code>size</code></td><td><code>Queen</code></td><td>Queen</td></tr>
+              <tr><td><code>position</code></td><td><code>side</code></td><td>Side</td></tr>
+              <tr><td><code>comfort</code></td><td><code>Plush</code>, <code>Firm</code></td><td>Plush, Medium, Firm</td></tr>
+              <tr><td><code>budget</code></td><td><code>no-preference</code>, <code>under-1000</code></td><td>No preference, Under $1,000</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="aside">
+          <h3>UI labels ≠ stored IDs</h3>
+          <p>Tests and API fixtures must use stored values, not display strings.</p>
+        </div>
+
+        <h3>Live UI question headings (Primary journey)</h3>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>#</th><th>UI heading</th><th>Internal key</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>1</td><td>What brings them in today?</td><td><code>why-shop</code></td></tr>
+              <tr><td>2</td><td>What disrupts their sleep?</td><td><code>disruptors</code></td></tr>
+              <tr><td>3</td><td>What size do they need?</td><td><code>size</code></td></tr>
+              <tr><td>4</td><td>Customer's preferred sleep position?</td><td><code>position</code></td></tr>
+              <tr><td>5</td><td>Preferred comfort level?</td><td><code>comfort</code></td></tr>
+              <tr><td>6</td><td>Their budget range?</td><td><code>budget</code></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="results-matches">
+        <h2><span class="section-num">§ 06 — Results</span>Results / matches experience</h2>
+        <p>After <strong>View Matches!</strong>, the app switches to the <strong>new matches view</strong> (<code>NewDreamhubMatcher</code>) — not the legacy <code>SummaryPage</code> / <code>results.tsx</code> PLP path (though that code still exists for migration).</p>
+
+        <h3>Live prod UI (validated 2026-06-04)</h3>
+        <ul>
+          <li><strong>Header tabs (post-quiz):</strong> <code>matcher quiz</code> · <code>matches</code> · <code>mattresses</code> · <code>foundations</code> · <code>bedding</code></li>
+          <li><strong>Matches tab content:</strong>
+            <ul>
+              <li><strong>"your customer's Top Matches"</strong> heading</li>
+              <li><strong>Matcher Summary</strong> — narrative tying quiz answers to recommendations</li>
+              <li><strong>3 match pairings</strong> — mattress + foundation side-by-side, <strong>Match</strong> badge, add-to-cart, financing, try-in-store, delivery</li>
+              <li><strong>"Why this match works for your customer"</strong> — attribute chips (e.g. Cooling, Pressure Relief)</li>
+              <li><strong>Add Both To Cart</strong> per pairing; <strong>Pair &amp; save</strong> combined financing (computed client-side via <code>useFinancingOffer</code> from App Config tiers — distinct from page-load <code>GET /api/financing</code>)</li>
+              <li><strong>Try-in-store toggle</strong> — Filters match pairings to in-store-tryable SKUs; may show a fallback banner when fallback foundation SKUs (D365 IDs starting with <code>F</code>) appear in the active slice</li>
+              <li><strong>FirmCare nudge:</strong> <em>"Protect your investment. Protect your sleep. Learn More"</em></li>
+              <li><strong>View All Mattress Matches</strong> / <strong>View All Foundation Matches</strong> buttons</li>
+            </ul>
+          </li>
+        </ul>
+
+        <p><strong>Category PLP tabs (mattresses · foundations):</strong> When <strong>Try In-Store</strong> filter is active and every visible product is online-only for the store, a fallback banner may appear (same helper pattern as matches — UI only, no extra API).</p>
+        <p><strong>Legacy Results components</strong> (<code>src/components/Results/*</code>) power the <strong>category PLP tabs</strong> below.</p>
+
+        <h3>Category tabs (mattresses · foundations · bedding)</h3>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Tab</th><th>Heading</th><th>Results count (sample)</th><th>Purpose</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><strong>matches</strong></td><td>your customer's Top Matches</td><td>3 pairings</td><td>Curated mattress + foundation pairs</td></tr>
+              <tr><td><strong>mattresses</strong></td><td>More Mattress Matches</td><td>8 results</td><td>Full ranked mattress list</td></tr>
+              <tr><td><strong>foundations</strong></td><td>Foundations</td><td>8 results</td><td>Adjustable bases + box springs</td></tr>
+              <tr><td><strong>bedding</strong></td><td>Bedding</td><td>109 results</td><td>Protectors, sheets, pillows, toppers</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p><strong>Shared PLP patterns (mattresses &amp; foundations):</strong> Matcher Summary (mattresses tab), filter chips (Clear All · Matches Only · Queen · Try In-Store), Sort &amp; Filter, product cards with badges (Match, New, Limited Time Deal, Bundle &amp; Save), add-to-cart, view details.</p>
+        <p><strong>Bedding tab differences:</strong> Sub-category chips (Mattress Protectors · Pillows), "Starting at" pricing, "Available to Buy Online".</p>
+        <p><strong>Code mapping:</strong> <strong>matches</strong> tab = <code>mapNewQuizResponseToMatches</code> / <code>NewDreamhubMatcher</code>. Category tabs = legacy <code>Results/</code> PLP components in the new navigation shell.</p>
+        <p><strong>Favorites &amp; email (legacy):</strong> <code>FavoritesDrawer</code> and <code>EmailResults</code> under <code>src/components/Results/</code> are <strong>legacy Matcher features</strong> — not observed on new DH Shop tabs in prod. May still appear when <code>isNewMatcherEnabled: false</code>. See <a href="../../context/07-legacy-low-priority.md">context/07-legacy-low-priority.md</a>.</p>
+      </section>
+
+      <section id="api-surface">
+        <h2><span class="section-num">§ 07 — APIs</span>API surface (BFF layer)</h2>
+        <p>For <strong>which APIs fire and when</strong> in the new matcher (journey phases, timing, sequence diagrams), see <a href="matcher-api-triggers.html"><strong>matcher-api-triggers.html</strong></a>.</p>
+        <p>Route source code lives in <a href="../../context/03-matcher-logic-and-api.md">context/03-matcher-logic-and-api.md</a>. Summary:</p>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Category</th><th>Key routes</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><strong>Matching (new)</strong></td><td><code>POST /api/matches</code> (V2), <code>POST /api/updateTopItems</code></td></tr>
+              <tr><td><strong>Matching (legacy)</strong></td><td><code>POST /api/recommendedProducts</code> (V1)</td></tr>
+              <tr><td><strong>Commerce</strong></td><td><code>/api/cartManagement</code>, <code>/api/createCart</code>, <code>/api/atpCache</code></td></tr>
+              <tr><td><strong>Enrichment</strong></td><td><code>/api/productRatings</code>, <code>/api/productPromos</code>, <code>/api/productXRayDetail</code></td></tr>
+              <tr><td><strong>Try-in-store</strong></td><td><code>GET /api/getTryInStoreData</code> — enriches adjustable bases with per-store try-in-store flags (chained after <code>recommendedAccessories</code>)</td></tr>
+              <tr><td><strong>Shell / catalog</strong></td><td><code>/api/financing</code>, <code>/api/defaultMessaging</code>, <code>/api/accessoryMapping</code>, <code>/api/recommendedAccessories</code></td></tr>
+              <tr><td><strong>Platform</strong></td><td><code>/api/trpc/[trpc]</code> (Unbxd PLP, productDetails, Unify, CPOS cart)</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p><strong>External integrations:</strong> Matches/Recommender API, D365, Mulesoft, Azure Spring, Unbxd, Salesforce, Tealium.</p>
+      </section>
+
+      <section id="state-management">
+        <h2><span class="section-num">§ 08 — State</span>State management</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Context</th><th>What it controls</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><strong><code>dreamhub-quiz</code></strong></td><td>Quiz answers, journey, completion</td></tr>
+              <tr><td><strong><code>dreamhub-navigation</code></strong></td><td>Active tab (quiz sections, matches, search, PDP)</td></tr>
+              <tr><td><strong><code>global</code></strong></td><td>App config, <code>isNewMatcherEnabled</code>, saved answers</td></tr>
+              <tr><td><strong><code>cart</code></strong></td><td>D365 basket state</td></tr>
+              <tr><td><strong><code>zipcode</code></strong></td><td>Customer zip → delivery/ATP</td></tr>
+              <tr><td><strong><code>atp-cache</code> / <code>atp-oos-cache</code></strong></td><td>Delivery date caching</td></tr>
+              <tr><td><strong><code>accessories</code> / <code>accessories-mapping</code></strong></td><td>Foundation catalog; chains <code>getTryInStoreData</code> for adjustable-base try-in-store flags</td></tr>
+              <tr><td><strong><code>analytics</code></strong></td><td>Tealium/event tracking</td></tr>
+              <tr><td><strong><code>email</code> / <code>email-content</code></strong></td><td><strong>Legacy</strong> email results (<code>Results/EmailResults</code>)</td></tr>
+              <tr><td><strong><code>dreamhub-search</code></strong></td><td>In-app product search</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p><strong>Favorites &amp; email:</strong> Legacy Results UI only — not part of new DH Shop matches/category tabs. Favorites API exists via tRPC; drawer UI tied to legacy paths.</p>
+        <p>Answers and navigation persist in <strong>session storage</strong> (<code>storageKeys.ts</code>).</p>
+      </section>
+
+      <section id="new-vs-legacy">
+        <h2><span class="section-num">§ 09 — Migration</span>New vs legacy</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Aspect</th><th>New (DH Shop)</th><th>Legacy</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Quiz UX</td><td>Single page, Q1-gated</td><td>Multi-page, <code>Get Started</code> welcome</td></tr>
+              <tr><td>API</td><td><code>/api/matches</code> (V2)</td><td><code>/api/recommendedProducts</code> (V1)</td></tr>
+              <tr><td>Answer shape</td><td><code>Record&lt;string, string[]&gt;</code> quiz keys</td><td><code>customerAnswers</code> with numeric disruptors</td></tr>
+              <tr><td>UI components</td><td><code>NewDreamhubMatcher</code>, <code>NewDreamhubNavigation</code></td><td>Old Results PLP paths, Cypress PageObjects</td></tr>
+              <tr><td>Favorites / Email</td><td>Not part of new DH Shop UI</td><td><code>FavoritesDrawer</code>, <code>EmailResults</code> under <code>Results/</code></td></tr>
+              <tr><td>Reference</td><td><code>context/01–06</code></td><td><code>context/07-legacy-low-priority.md</code></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="context-file-map">
+        <h2><span class="section-num">§ 10 — Context map</span>Context file map</h2>
+        <p>When exploring in Cursor, <code>@</code>-reference these files:</p>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>File</th><th>Load when you need…</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><a href="../../context/01-quiz-flow.md">context/01-quiz-flow.md</a></td><td>Journeys, Q1 naming, answer ID map, API handoff</td></tr>
+              <tr><td><a href="../../context/02-results-page.md">context/02-results-page.md</a></td><td>Results UI components, data-testids</td></tr>
+              <tr><td><a href="../../context/03-matcher-logic-and-api.md">context/03-matcher-logic-and-api.md</a></td><td>Matcher pipeline, API route source</td></tr>
+              <tr><td><a href="../../context/04-product-data-model.md">context/04-product-data-model.md</a></td><td>TypeScript interfaces, mock factories</td></tr>
+              <tr><td><a href="../../context/05-state-and-context.md">context/05-state-and-context.md</a></td><td>React contexts and hooks</td></tr>
+              <tr><td><a href="../../context/06-mock-data-and-fixtures.md">context/06-mock-data-and-fixtures.md</a></td><td>Test fixtures and setup</td></tr>
+              <tr><td><a href="../../context/07-legacy-low-priority.md">context/07-legacy-low-priority.md</a></td><td>Historical behavior only</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="live-validation">
+        <h2><span class="section-num">§ 11 — Validation</span>Live site validation (2026-06-04)</h2>
+        <p>Validated on prod via headed Playwright against <a href="https://dreamhub.mattressfirm.com/">dreamhub.mattressfirm.com</a>.</p>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>#</th><th>Claim</th><th>Result</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>1</td><td>Matcher embedded in DreamHub shell</td><td>Confirmed — left nav, search, store badge</td></tr>
+              <tr><td>2</td><td>Entry URL with store/expert params</td><td>Confirmed — auto-redirect from root</td></tr>
+              <tr><td>3</td><td>Welcome / Q1 copy</td><td>Confirmed</td></tr>
+              <tr><td>4</td><td>Q1 gating</td><td>Refined — tabs hidden until Q1; then full form visible</td></tr>
+              <tr><td>5–8</td><td>Progress tabs, CTA, 6/6 Answered</td><td>Confirmed</td></tr>
+              <tr><td>9</td><td>Matches pairings</td><td>Confirmed — 3 pairings + Matcher Summary</td></tr>
+              <tr><td>10</td><td>Search, cart, PLP filters</td><td>Confirmed</td></tr>
+              <tr><td>11</td><td>No legacy Get Started flow</td><td>Confirmed</td></tr>
+              <tr><td>12–14</td><td>Mattresses / foundations / bedding PLPs</td><td>Confirmed</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p><strong>Overlay follow-up:</strong> Promote category tab patterns and legacy favorites/email note into <code>overlays/02-results-page.overlay.md</code> during sprint review.</p>
+      </section>
+
+      <section id="repomix-sync">
+        <h2><span class="section-num">§ 12 — Code sync</span>Repomix sync notes (2026-06-25)</h2>
+        <p>Compared to the prior export (2026-06-03), routed changes are additive — no quiz copy or journey changes:</p>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Area</th><th>What changed</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><strong>Try-in-store</strong></td><td>New BFF route <code>GET /api/getTryInStoreData</code>; fallback banner helpers on Matches tab and category PLPs</td></tr>
+              <tr><td><strong>Matches init</strong></td><td>Extracted <code>resolveMatchesInitAction</code> — profile-preload, cache restore, or fetch on mount</td></tr>
+              <tr><td><strong>Financing display</strong></td><td>New <code>useFinancingOffer</code> hook + <code>IFinancingOffer</code> type — client-side tier math for match-card copy</td></tr>
+              <tr><td><strong>Tests</strong></td><td>Matcher util specs migrated from <code>.spec.ts</code> to <code>.test.ts</code>; new unit tests for the above</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p><strong>Not yet live-validated:</strong> <code>GET /api/getTryInStoreData</code> call order after accessories load; try-in-store toggle and fallback banners on prod.</p>
+      </section>
+
+      <section id="documentation-gaps">
+        <h2><span class="section-num">§ 13 — Gaps</span>Documentation gaps</h2>
+        <p>Overlays <code>04</code> and <code>06</code> are still placeholders; overlay <code>05</code> now covers matches-init and financing-offer hooks. API trigger timing is in <a href="matcher-api-triggers.html"><strong>matcher-api-triggers.html</strong></a>. Re-validate UX claims against prod after each repomix sync.</p>
+      </section>
+
+      <footer>
+        <span><strong>Maintainer</strong> Matcher knowledge hub — update after sprint sync or prod UX changes</span>
+        <span><strong>Last validated</strong> 2026-06-04 (prod UX) · code sync 2026-06-25</span>
+      </footer>
+
+    </article>
+  </div>
+</div>
+
+<script>
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'base',
+    themeVariables: {
+      fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif',
+      fontSize: '13px',
+      primaryColor: '#f4f3ee',
+      primaryTextColor: '#191817',
+      primaryBorderColor: '#c96442',
+      lineColor: '#5a554e',
+      secondaryColor: '#eeede6',
+      tertiaryColor: '#f4f3ee',
+      background: 'transparent',
+      mainBkg: '#f4f3ee',
+      secondBkg: '#eeede6',
+      tertiaryBkg: '#e8e6dc',
+      nodeBorder: '#c96442',
+      clusterBkg: 'transparent',
+      clusterBorder: '#d8d3c8',
+      titleColor: '#191817',
+      edgeLabelBackground: '#f4f3ee',
+      actorBkg: '#f4f3ee',
+      actorBorder: '#c96442',
+      actorTextColor: '#191817',
+      actorLineColor: '#5a554e',
+      signalColor: '#5a554e',
+      signalTextColor: '#191817',
+      labelBoxBkgColor: '#eeede6',
+      labelBoxBorderColor: '#c96442',
+      labelTextColor: '#191817',
+      noteBkgColor: '#f7e8df',
+      noteBorderColor: '#c96442',
+      noteTextColor: '#191817',
+      activationBkgColor: '#e89268',
+      activationBorderColor: '#c96442',
+      sequenceNumberColor: '#f4f3ee'
+    }
+  });
+
+  (function () {
+    const ENLARGE_SVG = '<svg viewBox="0 0 24 24"><path d="M4 4h6M4 4v6M4 4l7 7M20 20h-6M20 20v-6M20 20l-7-7"/></svg>';
+
+    function buildLightbox() {
+      const lb = document.createElement('div');
+      lb.className = 'lightbox';
+      lb.id = 'lightbox';
+      lb.innerHTML = '<div class="lightbox-content"><button class="lightbox-close" aria-label="Close">&times;</button><div class="lightbox-body"></div></div>';
+      document.body.appendChild(lb);
+      lb.addEventListener('click', (e) => { if (e.target === lb) closeLightbox(); });
+      lb.querySelector('.lightbox-close').addEventListener('click', closeLightbox);
+      return lb;
+    }
+
+    function openLightbox(diagramEl) {
+      const lb = document.getElementById('lightbox') || buildLightbox();
+      const body = lb.querySelector('.lightbox-body');
+      const svg = diagramEl.querySelector('.mermaid svg');
+      if (!svg) return;
+      const clone = svg.cloneNode(true);
+      clone.removeAttribute('width');
+      clone.removeAttribute('height');
+      clone.removeAttribute('style');
+      clone.setAttribute('width', '100%');
+      clone.setAttribute('height', '100%');
+      clone.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+      clone.style.display = 'block';
+      clone.style.width = '100%';
+      clone.style.height = 'auto';
+      clone.style.maxHeight = '82vh';
+      body.innerHTML = '';
+      body.appendChild(clone);
+      lb.classList.add('open');
+      document.body.classList.add('lightbox-open');
+    }
+
+    function closeLightbox() {
+      const lb = document.getElementById('lightbox');
+      if (!lb) return;
+      lb.classList.remove('open');
+      document.body.classList.remove('lightbox-open');
+    }
+
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeLightbox(); });
+
+    function addButtons() {
+      document.querySelectorAll('.diagram').forEach((d) => {
+        if (d.querySelector('.diagram-enlarge')) return;
+        const btn = document.createElement('button');
+        btn.className = 'diagram-enlarge';
+        btn.setAttribute('aria-label', 'Enlarge diagram');
+        btn.innerHTML = ENLARGE_SVG + '<span>Enlarge</span>';
+        btn.addEventListener('click', () => openLightbox(d));
+        d.appendChild(btn);
+      });
+    }
+
+    let tries = 0;
+    const interval = setInterval(() => {
+      tries++;
+      const rendered = document.querySelectorAll('.diagram .mermaid svg').length;
+      if (rendered > 0 || tries > 40) {
+        addButtons();
+        if (tries > 40) clearInterval(interval);
+      }
+      if (rendered >= document.querySelectorAll('.diagram').length) clearInterval(interval);
+    }, 150);
+  })();
+</script>
+</body>
+</html>
