@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>playwright-dh-shop — Workflow & command reference</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<style>
+  :root {
+    --bg-primary: #f4f3ee;
+    --bg-secondary: #eeede6;
+    --bg-tertiary: #e8e6dc;
+    --bg-inverse: #191817;
+    --text-primary: #191817;
+    --text-secondary: #5a554e;
+    --text-muted: #8a847a;
+    --accent: #c96442;
+    --accent-hover: #b55738;
+    --accent-soft: #e89268;
+    --border: #d8d3c8;
+    --border-strong: #c4bfb2;
+    --success: #6b7a3d;
+    --warning: #c98a42;
+    --danger: #a53e2a;
+    --sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+    --mono: 'JetBrains Mono', 'SF Mono', Menlo, monospace;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font: 400 17px/1.6 var(--sans);
+    color: var(--text-primary);
+    background: var(--bg-primary);
+    text-wrap: pretty;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page { max-width: 1180px; margin: 0 auto; padding: 64px 48px 96px; }
+
+  /* Masthead */
+  .masthead { border-bottom: 1px solid var(--border); padding-bottom: 48px; margin-bottom: 56px; }
+  .eyebrow { font: 500 12px/1 var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); margin: 0 0 24px; }
+  .title { font: 600 62px/1.05 var(--sans); letter-spacing: -0.025em; margin: 0 0 20px; text-wrap: balance; }
+  .deck { font: 400 italic 21px/1.45 var(--sans); color: var(--text-secondary); max-width: 680px; margin: 0 0 40px; text-wrap: pretty; }
+  .byline { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; padding-top: 24px; border-top: 1px solid var(--border); }
+  .byline-item { font-size: 14px; color: var(--text-secondary); }
+  .byline-item strong { display: block; font: 500 11px/1 var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px; }
+
+  /* Layout */
+  .layout { display: grid; grid-template-columns: 220px 1fr; gap: 64px; align-items: start; }
+  .toc { position: sticky; top: 32px; }
+  .toc-label { font: 500 11px/1 var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); margin: 0 0 16px; }
+  .toc ol { list-style: none; margin: 0; padding: 0; counter-reset: toc; }
+  .toc li { counter-increment: toc; margin: 0 0 10px; font-size: 14px; }
+  .toc li::before { content: counter(toc, decimal-leading-zero); font: 500 11px/1 var(--mono); color: var(--accent); margin-right: 10px; }
+  .toc a { color: var(--text-primary); text-decoration: none; border-bottom: 1px solid transparent; }
+  .toc a:hover { border-bottom-color: var(--accent); }
+
+  /* Article */
+  article { min-width: 0; max-width: 760px; }
+  article > section { margin-bottom: 80px; scroll-margin-top: 32px; }
+  article h2 { font: 600 32px/1.2 var(--sans); letter-spacing: -0.015em; margin: 0 0 24px; text-wrap: balance; }
+  article h3 { font: 600 21px/1.3 var(--sans); letter-spacing: -0.01em; margin: 40px 0 14px; }
+  article h4 { font: 500 13px/1.4 var(--sans); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-secondary); margin: 28px 0 12px; }
+  article p { margin: 0 0 18px; }
+  .section-num { font: 500 12px/1 var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); display: block; margin-bottom: 10px; }
+  .lede { font: 400 italic 19px/1.5 var(--sans); color: var(--text-secondary); margin: 0 0 28px; max-width: 640px; }
+
+  /* Inline code */
+  code { font: 500 0.92em var(--mono); background: var(--bg-secondary); padding: 2px 6px; border-radius: 4px; color: var(--text-primary); }
+
+  /* Code blocks */
+  pre {
+    background: var(--bg-inverse);
+    color: #ece9e1;
+    font: 400 13.5px/1.65 var(--mono);
+    padding: 20px 22px;
+    border-radius: 8px;
+    overflow-x: auto;
+    margin: 0 0 24px;
+  }
+  pre code { background: transparent; padding: 0; color: inherit; font-weight: 400; }
+  pre .c { color: #8a847a; font-style: italic; } /* comments */
+
+  /* Tables */
+  .table-wrap { margin: 0 0 28px; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+  table { width: 100%; border-collapse: collapse; font-size: 15px; }
+  thead th {
+    font: 500 11px/1 var(--mono); letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--text-secondary); text-align: left;
+    padding: 14px 18px; background: var(--bg-secondary); border-bottom: 1px solid var(--border);
+  }
+  tbody td { padding: 14px 18px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:nth-child(even) td { background: var(--bg-secondary); }
+  tbody td code { font-size: 13px; }
+
+  /* Phase blocks */
+  .phase { border-top: 1px solid var(--border); padding: 36px 0 8px; }
+  .phase:first-of-type { border-top: none; padding-top: 16px; }
+  .phase-label { font: 500 12px/1 var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); margin: 0 0 12px; }
+  .phase h3 { margin-top: 0; }
+
+  /* Two-column code pairs (work / home) */
+  .machine-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px; }
+  .machine-pair h5 {
+    font: 500 11px/1 var(--mono); letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--accent); margin: 0 0 10px;
+  }
+  .machine-pair pre { margin: 0; }
+
+  /* Aside */
+  .aside { background: var(--bg-inverse); color: #ece9e1; padding: 32px 36px; border-radius: 8px; margin: 36px 0; }
+  .aside h3 { color: #f4f3ee; margin: 0 0 12px; font: 600 19px/1.3 var(--sans); }
+  .aside p { color: #c8c3b8; margin: 0 0 10px; font-size: 15px; }
+  .aside p:last-child { margin-bottom: 0; }
+  .aside code { background: rgba(255,255,255,0.08); color: #f4f3ee; }
+
+  /* Blockquote */
+  blockquote {
+    font: 400 italic 19px/1.5 var(--sans);
+    border-left: 3px solid var(--accent);
+    padding-left: 22px;
+    margin: 28px 0;
+    color: var(--text-secondary);
+    max-width: 640px;
+  }
+
+  /* Lists */
+  ol, ul { padding-left: 22px; margin: 0 0 22px; }
+  ol li, ul li { margin-bottom: 8px; }
+
+  /* Footer */
+  footer { margin-top: 96px; padding-top: 32px; border-top: 1px solid var(--border); font-size: 13px; color: var(--text-muted); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 16px; }
+  footer strong { color: var(--text-secondary); font-weight: 500; }
+
+  /* Responsive */
+  @media (max-width: 900px) {
+    .page { padding: 40px 24px 64px; }
+    .title { font-size: 40px; }
+    .layout { grid-template-columns: 1fr; gap: 40px; }
+    .toc { position: static; }
+    .byline { grid-template-columns: 1fr 1fr; }
+    .machine-pair { grid-template-columns: 1fr; }
+    article { max-width: none; }
+    body { font-size: 18px; }
+  }
+  @media (max-width: 640px) {
+    .byline { grid-template-columns: 1fr; }
+    .title { font-size: 32px; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="masthead">
+    <p class="eyebrow">dh-shop · Test infrastructure</p>
+    <h1 class="title">playwright-dh-shop</h1>
+    <p class="deck">A Playwright test suite worked on across two machines — a workflow guide and command reference for keeping work and home in sync through a single <code>main</code> branch.</p>
+    <div class="byline">
+      <div class="byline-item"><strong>Audience</strong>Engineers on dh-shop</div>
+      <div class="byline-item"><strong>Scope</strong>Git sync + Playwright CLI</div>
+      <div class="byline-item"><strong>Sync bridge</strong>origin/main</div>
+      <div class="byline-item"><strong>Branches</strong>dhshopwork, dhshophome</div>
+    </div>
+  </header>
+
+  <div class="layout">
+
+    <nav class="toc">
+      <p class="toc-label">Contents</p>
+      <ol>
+        <li><a href="#topology">Topology</a></li>
+        <li><a href="#workflow">Git workflow</a></li>
+        <li><a href="#playwright">Playwright commands</a></li>
+        <li><a href="#config">Config reference</a></li>
+      </ol>
+    </nav>
+
+    <article>
+
+      <section id="topology">
+        <h2><span class="section-num">§ 01 — Topology</span>Two machines, one bridge</h2>
+        <p class="lede">Development happens locally on a named branch per machine. The shared <code>main</code> branch on GitHub is the only place the two worlds meet — never the place where new work begins.</p>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Branch</th><th>Machine</th><th>Purpose</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>main</code></td><td>GitHub (remote)</td><td>Sync bridge — never commit directly</td></tr>
+              <tr><td><code>dhshopwork</code></td><td>Work laptop</td><td>Active development at work</td></tr>
+              <tr><td><code>dhshophome</code></td><td>Home PC</td><td>Active development at home</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <blockquote>Treat <code>main</code> like an airport, not a desk. You pass through it; you don't live in it.</blockquote>
+      </section>
+
+      <section id="workflow">
+        <h2><span class="section-num">§ 02 — Git workflow</span>The session lifecycle</h2>
+        <p class="lede">Every coding session follows the same four-beat rhythm: sync down, commit freely, sync up, switch machines. Skipping any beat is how branches drift.</p>
+
+        <div class="phase">
+          <p class="phase-label">Phase A · open</p>
+          <h3>Starting a session</h3>
+          <p>Always sync with <code>origin/main</code> before writing any code. Rebasing — not merging — keeps the local branch's history linear on top of whatever the other machine last pushed.</p>
+
+          <div class="machine-pair">
+            <div>
+              <h5>At work</h5>
+<pre><code>git checkout dhshopwork
+git fetch origin main
+git rebase origin/main</code></pre>
+            </div>
+            <div>
+              <h5>At home</h5>
+<pre><code>git checkout dhshophome
+git fetch origin main
+git rebase origin/main</code></pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="phase">
+          <p class="phase-label">Phase B · work</p>
+          <h3>During a session</h3>
+          <p>Commit freely on the local branch. These commits stay local until the session ends, so the message style can be as scratch or as polished as the moment calls for.</p>
+<pre><code>git add .
+git commit -m "your message here"</code></pre>
+        </div>
+
+        <div class="phase">
+          <p class="phase-label">Phase C · close</p>
+          <h3>Ending a session</h3>
+          <p>Push the work up through <code>main</code> so the other machine can pick it up tomorrow. The pattern is symmetrical — merge local into main, push, hop back to the local branch.</p>
+
+          <div class="machine-pair">
+            <div>
+              <h5>At work</h5>
+<pre><code>git checkout main
+git merge dhshopwork
+git push origin main
+git checkout dhshopwork</code></pre>
+            </div>
+            <div>
+              <h5>At home</h5>
+<pre><code>git checkout main
+git merge dhshophome
+git push origin main
+git checkout dhshophome</code></pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="phase">
+          <p class="phase-label">Phase D · interrupt</p>
+          <h3>Switching machines mid-task</h3>
+          <p>When the work isn't ready to commit but the day is over anyway, stash it. The stash lives only on the current machine — so commit and push if you actually need the changes to travel.</p>
+<pre><code><span class="c"># Before leaving</span>
+git stash
+
+<span class="c"># After syncing on the other machine, restore your work</span>
+git stash pop</code></pre>
+        </div>
+
+        <div class="phase">
+          <p class="phase-label">Phase E · recover</p>
+          <h3>If you hit a conflict</h3>
+          <p>Conflicts usually mean both machines touched the same file before syncing. Git will pause the rebase or merge; resolve, stage, and commit.</p>
+<pre><code>git status                  <span class="c"># see which files conflict</span>
+<span class="c"># open and fix the conflicting files</span>
+git add .
+git commit -m "resolve merge conflict"</code></pre>
+        </div>
+
+        <div class="aside">
+          <h3>The cardinal rule</h3>
+          <p><strong>Never commit directly to <code>main</code>.</strong> It is the bridge between machines, not a workspace. If main accumulates its own commits, the rebase model breaks and merges start producing the kind of tangled history that takes an afternoon to unwind.</p>
+        </div>
+      </section>
+
+      <section id="playwright">
+        <h2><span class="section-num">§ 03 — Playwright commands</span>The CLI, grouped by intent</h2>
+        <p class="lede">Five categories cover almost everything: installing, running, viewing results, generating code, and the small set of utilities that don't fit anywhere else.</p>
+
+        <h3>Installation &amp; setup</h3>
+<pre><code><span class="c"># Install Playwright and browsers</span>
+npm init playwright@latest
+
+<span class="c"># Update Playwright to the latest version</span>
+npm install -D @playwright/test@latest
+
+<span class="c"># Install / reinstall all browsers</span>
+npx playwright install
+
+<span class="c"># Install a specific browser only</span>
+npx playwright install chromium
+npx playwright install firefox
+npx playwright install webkit</code></pre>
+
+        <h3>Running tests</h3>
+<pre><code><span class="c"># Run all tests (headless by default)</span>
+npx playwright test
+
+<span class="c"># Run tests in UI mode — interactive, with time-travel debugger</span>
+npx playwright test --ui
+
+<span class="c"># Run tests headed (watch the browser)</span>
+npx playwright test --headed
+
+<span class="c"># Run a specific test file</span>
+npx playwright test tests/example.spec.ts
+
+<span class="c"># Run tests matching a title keyword</span>
+npx playwright test -g "login"
+
+<span class="c"># Run tests in a specific browser only</span>
+npx playwright test --project=chromium
+npx playwright test --project=firefox
+npx playwright test --project=webkit
+
+<span class="c"># Run tests in parallel with a set number of workers</span>
+npx playwright test --workers=4
+
+<span class="c"># Run in debug mode (pauses at each step)</span>
+npx playwright test --debug</code></pre>
+
+        <h3>Viewing results</h3>
+<pre><code><span class="c"># Open the last HTML test report</span>
+npx playwright show-report
+
+<span class="c"># Show a specific report folder</span>
+npx playwright show-report playwright-report</code></pre>
+
+        <h3>Code generation</h3>
+<pre><code><span class="c"># Open codegen to record a new test by clicking through the browser</span>
+npx playwright codegen https://your-site.com
+
+<span class="c"># Record into a specific output file</span>
+npx playwright codegen https://your-site.com --output tests/new-test.spec.ts</code></pre>
+
+        <h3>Utilities</h3>
+<pre><code><span class="c"># Check installed Playwright version</span>
+npx playwright --version
+
+<span class="c"># List all available projects defined in playwright.config.ts</span>
+npx playwright test --list
+
+<span class="c"># Show all test names without running them</span>
+npx playwright test --list --reporter=list</code></pre>
+      </section>
+
+      <section id="config">
+        <h2><span class="section-num">§ 04 — Config reference</span>What lives in playwright.config.ts</h2>
+        <p class="lede">Tests are configured at the project root. The settings below are the ones touched most often — the rest of the file usually stays untouched between sessions.</p>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Setting</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>testDir</code></td><td>Folder where test files live</td></tr>
+              <tr><td><code>projects</code></td><td>Browser targets (chromium, firefox, webkit)</td></tr>
+              <tr><td><code>use.baseURL</code></td><td>Base URL prepended to all <code>page.goto()</code> calls</td></tr>
+              <tr><td><code>use.headless</code></td><td><code>true</code> by default; set <code>false</code> to watch tests run</td></tr>
+              <tr><td><code>retries</code></td><td>How many times to retry a failing test</td></tr>
+              <tr><td><code>reporter</code></td><td>Output format — <code>html</code>, <code>list</code>, <code>dot</code>, etc.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <footer>
+        <div><strong>Repository</strong> &nbsp; playwright-dh-shop</div>
+        <div><strong>Last reviewed</strong> &nbsp; June 2026</div>
+      </footer>
+
+    </article>
+  </div>
+</div>
+
+</body>
+</html>
