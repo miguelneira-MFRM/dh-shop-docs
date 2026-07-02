@@ -1,318 +1,372 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Matcher Knowledge Hub</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-<style>
-  :root {
-    --bg-primary: #f4f3ee;
-    --bg-secondary: #eeede6;
-    --bg-tertiary: #e8e6dc;
-    --bg-inverse: #191817;
-    --text-primary: #191817;
-    --text-secondary: #5a554e;
-    --text-muted: #8a847a;
-    --accent: #c96442;
-    --accent-hover: #b55738;
-    --accent-soft: #e89268;
-    --border: #d8d3c8;
-    --border-strong: #c4bfb2;
-    --success: #6b7a3d;
-    --warning: #c98a42;
-    --danger: #a53e2a;
-    --sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
-    --mono: 'JetBrains Mono', 'SF Mono', Menlo, monospace;
-  }
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Matcher Knowledge Hub</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg-primary: #f4f3ee;
+        --bg-secondary: #eeede6;
+        --bg-tertiary: #e8e6dc;
+        --bg-inverse: #191817;
+        --text-primary: #191817;
+        --text-secondary: #5a554e;
+        --text-muted: #8a847a;
+        --accent: #c96442;
+        --accent-hover: #b55738;
+        --accent-soft: #e89268;
+        --border: #d8d3c8;
+        --border-strong: #c4bfb2;
+        --success: #6b7a3d;
+        --warning: #c98a42;
+        --danger: #a53e2a;
+        --sans:
+          "Inter", -apple-system, BlinkMacSystemFont, "Helvetica Neue",
+          sans-serif;
+        --mono: "JetBrains Mono", "SF Mono", Menlo, monospace;
+      }
 
-  * { box-sizing: border-box; }
-  html, body { margin: 0; padding: 0; }
-  body {
-    font: 400 17px/1.6 var(--sans);
-    color: var(--text-primary);
-    background: var(--bg-primary);
-    text-wrap: pretty;
-    -webkit-font-smoothing: antialiased;
-  }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        font: 400 17px/1.6 var(--sans);
+        color: var(--text-primary);
+        background: var(--bg-primary);
+        text-wrap: pretty;
+        -webkit-font-smoothing: antialiased;
+      }
 
-  .page { max-width: 1180px; margin: 0 auto; padding: 64px 48px 96px; }
+      .page {
+        max-width: 1180px;
+        margin: 0 auto;
+        padding: 64px 48px 96px;
+      }
 
-  .masthead { border-bottom: 1px solid var(--border); padding-bottom: 48px; margin-bottom: 56px; }
-  .eyebrow { font: 500 12px/1 var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); margin: 0 0 24px; }
-  .title { font: 600 50px/1.1 var(--sans); letter-spacing: -0.02em; margin: 0 0 20px; text-wrap: balance; }
-  .deck { font: 400 italic 21px/1.45 var(--sans); color: var(--text-secondary); max-width: 680px; margin: 0 0 40px; text-wrap: pretty; }
-  .byline { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; padding-top: 24px; border-top: 1px solid var(--border); }
-  .byline-item { font-size: 14px; color: var(--text-secondary); }
-  .byline-item strong { display: block; font: 500 11px/1 var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px; }
+      .masthead {
+        border-bottom: 1px solid var(--border);
+        padding-bottom: 48px;
+        margin-bottom: 56px;
+      }
+      .eyebrow {
+        font: 500 12px/1 var(--mono);
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--accent);
+        margin: 0 0 24px;
+      }
+      .title {
+        font: 600 50px/1.1 var(--sans);
+        letter-spacing: -0.02em;
+        margin: 0 0 20px;
+        text-wrap: balance;
+      }
+      .deck {
+        font: 400 italic 21px/1.45 var(--sans);
+        color: var(--text-secondary);
+        max-width: 680px;
+        margin: 0 0 40px;
+        text-wrap: pretty;
+      }
+      .byline {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 24px;
+        padding-top: 24px;
+        border-top: 1px solid var(--border);
+      }
+      .byline-item {
+        font-size: 14px;
+        color: var(--text-secondary);
+      }
+      .byline-item strong {
+        display: block;
+        font: 500 11px/1 var(--mono);
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        margin-bottom: 6px;
+      }
 
-  .layout { display: grid; grid-template-columns: 220px 1fr; gap: 64px; align-items: start; }
-  .toc { position: sticky; top: 32px; }
-  .toc-label { font: 500 11px/1 var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); margin: 0 0 16px; }
-  .toc ol { list-style: none; margin: 0; padding: 0; counter-reset: toc; }
-  .toc li { counter-increment: toc; margin: 0 0 10px; font-size: 14px; }
-  .toc li::before { content: counter(toc, decimal-leading-zero); font: 500 11px/1 var(--mono); color: var(--accent); margin-right: 10px; }
-  .toc a { color: var(--text-primary); text-decoration: none; border-bottom: 1px solid transparent; }
-  .toc a:hover { border-bottom-color: var(--accent); }
+      .layout {
+        display: grid;
+        grid-template-columns: 220px 1fr;
+        gap: 64px;
+        align-items: start;
+      }
+      .toc {
+        position: sticky;
+        top: 32px;
+      }
+      .toc-label {
+        font: 500 11px/1 var(--mono);
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        margin: 0 0 16px;
+      }
+      .toc ol {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        counter-reset: toc;
+      }
+      .toc li {
+        counter-increment: toc;
+        margin: 0 0 10px;
+        font-size: 14px;
+      }
+      .toc li::before {
+        content: counter(toc, decimal-leading-zero);
+        font: 500 11px/1 var(--mono);
+        color: var(--accent);
+        margin-right: 10px;
+      }
+      .toc a {
+        color: var(--text-primary);
+        text-decoration: none;
+        border-bottom: 1px solid transparent;
+      }
+      .toc a:hover {
+        border-bottom-color: var(--accent);
+      }
 
-  article { min-width: 0; max-width: 760px; }
-  .article-intro { font: 400 italic 19px/1.5 var(--sans); color: var(--text-secondary); margin: 0 0 56px; max-width: 640px; }
-  article > section { margin-bottom: 80px; scroll-margin-top: 32px; }
-  article h2 { font: 600 32px/1.2 var(--sans); letter-spacing: -0.015em; margin: 0 0 24px; text-wrap: balance; }
-  article h3 { font: 600 21px/1.3 var(--sans); letter-spacing: -0.01em; margin: 40px 0 14px; }
-  article h4 { font: 500 13px/1.4 var(--sans); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-secondary); margin: 28px 0 12px; }
-  article p { margin: 0 0 18px; }
-  .section-num { font: 500 12px/1 var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); display: block; margin-bottom: 10px; }
+      article {
+        min-width: 0;
+        max-width: 760px;
+      }
+      .article-intro {
+        font: 400 italic 19px/1.5 var(--sans);
+        color: var(--text-secondary);
+        margin: 0 0 56px;
+        max-width: 640px;
+      }
+      article > section {
+        margin-bottom: 80px;
+        scroll-margin-top: 32px;
+      }
+      article h2 {
+        font: 600 32px/1.2 var(--sans);
+        letter-spacing: -0.015em;
+        margin: 0 0 24px;
+        text-wrap: balance;
+      }
+      article h3 {
+        font: 600 21px/1.3 var(--sans);
+        letter-spacing: -0.01em;
+        margin: 40px 0 14px;
+      }
+      article h4 {
+        font: 500 13px/1.4 var(--sans);
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--text-secondary);
+        margin: 28px 0 12px;
+      }
+      article p {
+        margin: 0 0 18px;
+      }
+      .section-num {
+        font: 500 12px/1 var(--mono);
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--accent);
+        display: block;
+        margin-bottom: 10px;
+      }
 
-  a { color: var(--accent); text-decoration: none; border-bottom: 1px solid transparent; }
-  a:hover { border-bottom-color: var(--accent); }
-  strong { font-weight: 600; }
+      a {
+        color: var(--accent);
+        text-decoration: none;
+        border-bottom: 1px solid transparent;
+      }
+      a:hover {
+        border-bottom-color: var(--accent);
+      }
+      strong {
+        font-weight: 600;
+      }
 
-  code { font: 500 0.92em var(--mono); background: var(--bg-secondary); padding: 2px 6px; border-radius: 4px; color: var(--text-primary); }
+      code {
+        font: 500 0.92em var(--mono);
+        background: var(--bg-secondary);
+        padding: 2px 6px;
+        border-radius: 4px;
+        color: var(--text-primary);
+      }
 
-  pre {
-    margin: 0 0 24px;
-    padding: 20px 24px;
-    background: var(--bg-secondary);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    overflow-x: auto;
-  }
-  pre code {
-    font: 400 14px/1.6 var(--mono);
-    background: transparent;
-    padding: 0;
-    border-radius: 0;
-    display: block;
-    white-space: pre;
-  }
+      pre {
+        margin: 0 0 24px;
+        padding: 20px 24px;
+        background: var(--bg-secondary);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        overflow-x: auto;
+      }
+      pre code {
+        font: 400 14px/1.6 var(--mono);
+        background: transparent;
+        padding: 0;
+        border-radius: 0;
+        display: block;
+        white-space: pre;
+      }
 
-  blockquote {
-    font: 400 italic 19px/1.5 var(--sans);
-    border-left: 3px solid var(--accent);
-    padding-left: 22px;
-    margin: 24px 0 28px;
-    color: var(--text-secondary);
-    max-width: 640px;
-  }
-  blockquote p { margin: 0; }
+      blockquote {
+        font: 400 italic 19px/1.5 var(--sans);
+        border-left: 3px solid var(--accent);
+        padding-left: 22px;
+        margin: 24px 0 28px;
+        color: var(--text-secondary);
+        max-width: 640px;
+      }
+      blockquote p {
+        margin: 0;
+      }
 
-  ol, ul { padding-left: 22px; margin: 0 0 22px; }
-  ol li, ul li { margin-bottom: 8px; }
-  li::marker { color: var(--accent); }
+      ol,
+      ul {
+        padding-left: 22px;
+        margin: 0 0 22px;
+      }
+      ol li,
+      ul li {
+        margin-bottom: 8px;
+      }
+      li::marker {
+        color: var(--accent);
+      }
 
-  .table-wrap { margin: 0 0 28px; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
-  table { width: 100%; border-collapse: collapse; font-size: 15px; }
-  thead th {
-    font: 500 11px/1 var(--mono); letter-spacing: 0.08em; text-transform: uppercase;
-    color: var(--text-secondary); text-align: left;
-    padding: 14px 18px; background: var(--bg-secondary); border-bottom: 1px solid var(--border);
-  }
-  tbody td { padding: 14px 18px; border-bottom: 1px solid var(--border); vertical-align: top; }
-  tbody tr:last-child td { border-bottom: none; }
-  tbody tr:nth-child(even) td { background: var(--bg-secondary); }
-  tbody td code { font-size: 13px; }
+      .table-wrap {
+        margin: 0 0 28px;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        overflow: hidden;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 15px;
+      }
+      thead th {
+        font: 500 11px/1 var(--mono);
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--text-secondary);
+        text-align: left;
+        padding: 14px 18px;
+        background: var(--bg-secondary);
+        border-bottom: 1px solid var(--border);
+      }
+      tbody td {
+        padding: 14px 18px;
+        border-bottom: 1px solid var(--border);
+        vertical-align: top;
+      }
+      tbody tr:last-child td {
+        border-bottom: none;
+      }
+      tbody tr:nth-child(even) td {
+        background: var(--bg-secondary);
+      }
+      tbody td code {
+        font-size: 13px;
+      }
 
-  footer { margin-top: 96px; padding-top: 32px; border-top: 1px solid var(--border); font-size: 13px; color: var(--text-muted); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 16px; }
-  footer strong { color: var(--text-secondary); font-weight: 500; }
+      footer {
+        margin-top: 96px;
+        padding-top: 32px;
+        border-top: 1px solid var(--border);
+        font-size: 13px;
+        color: var(--text-muted);
+        display: flex;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 16px;
+      }
+      footer strong {
+        color: var(--text-secondary);
+        font-weight: 500;
+      }
 
-  @media (max-width: 900px) {
-    .page { padding: 40px 24px 64px; }
-    .title { font-size: 36px; }
-    .layout { grid-template-columns: 1fr; gap: 40px; }
-    .toc { position: static; }
-    .byline { grid-template-columns: 1fr 1fr; }
-    article { max-width: none; }
-    body { font-size: 18px; }
-  }
-  @media (max-width: 640px) {
-    .byline { grid-template-columns: 1fr; }
-    .title { font-size: 32px; }
-  }
-</style>
-</head>
-<body>
-<div class="page">
+      @media (max-width: 900px) {
+        .page {
+          padding: 40px 24px 64px;
+        }
+        .title {
+          font-size: 36px;
+        }
+        .layout {
+          grid-template-columns: 1fr;
+          gap: 40px;
+        }
+        .toc {
+          position: static;
+        }
+        .byline {
+          grid-template-columns: 1fr 1fr;
+        }
+        article {
+          max-width: none;
+        }
+        body {
+          font-size: 18px;
+        }
+      }
+      @media (max-width: 640px) {
+        .byline {
+          grid-template-columns: 1fr;
+        }
+        .title {
+          font-size: 32px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <header class="masthead">
+        <p class="eyebrow">DreamHub · Knowledge hub</p>
+        <h1 class="title">Matcher Knowledge Hub</h1>
+      </header>
 
-  <header class="masthead">
-    <p class="eyebrow">DreamHub · Knowledge hub</p>
-    <h1 class="title">Matcher Knowledge Hub</h1>
-    <p class="deck">Structured context and planning docs for the DreamHub Mattress Matcher app — repomix-derived codebase reference for exploration, documentation, and sprint planning.</p>
-    <div class="byline">
-      <div class="byline-item"><strong>Role</strong>Context &amp; planning (not a test suite)</div>
-      <div class="byline-item"><strong>Source</strong>Repomix exports from Matcher master</div>
-      <div class="byline-item"><strong>Audience</strong>Product owners, QA, engineers</div>
-      <div class="byline-item"><strong>Cadence</strong>Sync every 1–2 weeks</div>
+      <div class="layout">
+        <nav class="toc">
+          <p class="toc-label">Contents</p>
+          <ol>
+            <li>
+              <a
+                href="https://miguelneira-mfrm.github.io/dh-shop-docs/README.html"
+                >README</a
+              >
+            </li>
+            <li>
+              <a
+                href="https://miguelneira-mfrm.github.io/dh-shop-docs/matcher-app-overview.html"
+                >App Overview</a
+              >
+            </li>
+            <li>
+              <a
+                href="https://miguelneira-mfrm.github.io/dh-shop-docs/matcher-api-triggers.html"
+                >APIs</a
+              >
+            </li>
+          </ol>
+        </nav>
+      </div>
     </div>
-  </header>
-
-  <div class="layout">
-
-    <nav class="toc">
-      <p class="toc-label">Contents</p>
-      <ol>
-        <li><a href="#what-lives-here">What lives here</a></li>
-        <li><a href="#quick-start">Quick start</a></li>
-        <li><a href="#publishing-plan-docs">Publishing plan docs</a></li>
-        <li><a href="#healthy-export-check">Healthy export check</a></li>
-        <li><a href="#app-overview">App overview</a></li>
-        <li><a href="#context-files">Context files</a></li>
-        <li><a href="#related-repos">Related repos</a></li>
-        <li><a href="#sprint-cadence">Sprint cadence</a></li>
-      </ol>
-    </nav>
-
-    <article>
-
-      <p class="article-intro">This repo is <strong>not</strong> the Matcher app itself — it holds AI-friendly context buckets, curated overlays, and shareable planning docs that stay in sync with the master codebase.</p>
-
-      <section id="what-lives-here">
-        <h2><span class="section-num">§ 01 — Layout</span>What lives here</h2>
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr><th>Path</th><th>Purpose</th></tr>
-            </thead>
-            <tbody>
-              <tr><td><code>inbox/</code></td><td>Drop new <code>repomix-YYYY-MM-DD.xml</code> exports from the Matcher master repo</td></tr>
-              <tr><td><code>context/</code></td><td>AI-friendly context files (7 buckets) — load in Cursor with <code>@filename</code></td></tr>
-              <tr><td><code>overlays/</code></td><td>Curated summaries that survive automated sync (edit these, not <code>context/</code>)</td></tr>
-              <tr><td><code>snapshots/</code></td><td>Per-sprint routing manifests for diffing</td></tr>
-              <tr><td><code>docs/</code></td><td>Plans, spikes, ADRs — Markdown sources for planning docs</td></tr>
-              <tr><td><code>docs/html/</code></td><td>Shareable HTML exports of plan docs (for outside teams)</td></tr>
-              <tr><td><code>scripts/</code></td><td>Repomix parse, context generation, tech doc checks</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </section>
-
-      <section id="quick-start">
-        <h2><span class="section-num">§ 02 — Workflow</span>Quick start</h2>
-        <ol>
-          <li>Export repomix from the Matcher <strong>master app repo</strong> (see <code>config/repomix.config.json</code>)</li>
-          <li>Save to <code>inbox/repomix-YYYY-MM-DD.xml</code></li>
-          <li>Eyeball the <a href="#healthy-export-check">healthy export check</a> below</li>
-          <li>In Cursor: invoke the sync skill — <strong>"Sync context from latest repomix"</strong></li>
-          <li>Review <code>context/CHANGELOG.md</code> and update <code>overlays/</code> if behavior changed</li>
-        </ol>
-
-        <h3>Cursor invocation (primary)</h3>
-        <p>In this project's Cursor window, start a new chat and say exactly:</p>
-        <blockquote><p><strong>Sync context from latest repomix</strong></p></blockquote>
-
-        <h3>Manual fallback</h3>
-        <pre><code>cd c:\MFRM\Cursor\matcher-knowledge-hub
-npm run sync
-# or with an explicit file:
-npm run sync -- inbox/repomix-2026-06-03.xml</code></pre>
-        <p>Step-by-step:</p>
-        <pre><code>npx tsx scripts/parse-repomix.ts inbox/repomix-YYYY-MM-DD.xml
-npx tsx scripts/diff-manifest.ts inbox/repomix-YYYY-MM-DD.xml
-npx tsx scripts/generate-context.ts inbox/repomix-YYYY-MM-DD.xml</code></pre>
-        <p>Then review <code>context/CHANGELOG.md</code> and update <code>overlays/</code> for any flagged buckets.</p>
-      </section>
-
-      <section id="publishing-plan-docs">
-        <h2><span class="section-num">§ 03 — Publishing</span>Publishing plan docs as HTML</h2>
-        <p>Internal Markdown docs can be published as polished HTML for outside teams. HTML is agent-generated from the design system in <code>.cursor/skills/convert-techdoc-html/references/</code> — edit Markdown, not HTML, for content changes.</p>
-        <ol>
-          <li>Write or update Markdown in <code>docs/plans/</code> (or a listed root doc like <code>docs/matcher-api-triggers.md</code>)</li>
-          <li>In Cursor: <strong>"Convert tech doc to HTML"</strong> — optionally name the file</li>
-          <li>HTML lands in <code>docs/html/{basename}.html</code></li>
-          <li>Optional sanity check: <code>npm run check-techdocs</code></li>
-        </ol>
-
-        <h3>Cursor invocation</h3>
-        <blockquote><p><strong>Convert tech doc to HTML</strong></p></blockquote>
-      </section>
-
-      <section id="healthy-export-check">
-        <h2><span class="section-num">§ 04 — Quality gate</span>Healthy export check</h2>
-        <p>Before running sync, confirm the export looks right (calibrated from 2026-06-03):</p>
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr><th>Check</th><th>Expected</th></tr>
-            </thead>
-            <tbody>
-              <tr><td>Total <code>&lt;file&gt;</code> entries in repomix XML</td><td>~2,100 (full master-repo export)</td></tr>
-              <tr><td>Routed into context buckets</td><td>~850</td></tr>
-              <tr><td>Key paths present</td><td><code>src/pages/index.tsx</code>, <code>src/pages/results.tsx</code>, <code>src/pages/api/</code>, <code>src/utils/matches/</code>, <code>testSetup/</code></td></tr>
-              <tr><td>Key paths absent</td><td><code>node_modules/</code>, <code>.env</code>, <code>dist/</code>, <code>.next/</code></td></tr>
-              <tr><td>Filename</td><td><code>repomix-YYYY-MM-DD.xml</code> in <code>inbox/</code></td></tr>
-            </tbody>
-          </table>
-        </div>
-        <p>If total file count swings <strong>&gt;20%</strong> sprint-over-sprint with no known scope change, stop — repomix config drift, not code change.</p>
-        <p>Unrouted files (~1,200) are expected: infra, configs, and app paths outside the 7 buckets land in <code>reports/unrouted-files.json</code>.</p>
-      </section>
-
-      <section id="app-overview">
-        <h2><span class="section-num">§ 05 — Product docs</span>App overview</h2>
-        <p>Product-level architecture, flows, and APIs for the <strong>DreamHub Mattress Matcher</strong> (code-derived + live-validated):</p>
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr><th>Doc</th><th>Markdown (edit)</th><th>HTML (share)</th></tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>App overview</td>
-                <td><a href="../matcher-app-overview.md">docs/matcher-app-overview.md</a></td>
-                <td><a href="matcher-app-overview.html">matcher-app-overview.html</a></td>
-              </tr>
-              <tr>
-                <td>API triggers</td>
-                <td><a href="../matcher-api-triggers.md">docs/matcher-api-triggers.md</a></td>
-                <td><a href="matcher-api-triggers.html">matcher-api-triggers.html</a></td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </section>
-
-      <section id="context-files">
-        <h2><span class="section-num">§ 06 — Context</span>Context files</h2>
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr><th>File</th><th>Load when…</th></tr>
-            </thead>
-            <tbody>
-              <tr><td><code>context/01-quiz-flow.md</code></td><td>Quiz journeys, Q1 naming, matcher API handoff</td></tr>
-              <tr><td><code>context/02-results-page.md</code></td><td>Results UI and components</td></tr>
-              <tr><td><code>context/03-matcher-logic-and-api.md</code></td><td>Matcher pipeline and API routes</td></tr>
-              <tr><td><code>context/04-product-data-model.md</code></td><td>Types and data shapes</td></tr>
-              <tr><td><code>context/05-state-and-context.md</code></td><td>React context, cart, zip, global state</td></tr>
-              <tr><td><code>context/06-mock-data-and-fixtures.md</code></td><td>Mock data and fixture reference</td></tr>
-              <tr><td><code>context/07-legacy-low-priority.md</code></td><td>Legacy code — reference only</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </section>
-
-      <section id="related-repos">
-        <h2><span class="section-num">§ 07 — Ecosystem</span>Related repos</h2>
-        <ul>
-          <li><strong>Matcher master</strong> — source app (repomix export origin)</li>
-          <li><strong>cursor-playwright</strong> — Playwright test suite (optional consumer of <code>context/</code>)</li>
-        </ul>
-      </section>
-
-      <section id="sprint-cadence">
-        <h2><span class="section-num">§ 08 — Cadence</span>Sprint cadence</h2>
-        <p>Master repo updates every 1–2 weeks. After each export, run context sync and commit with: <code>context: sync from repomix YYYY-MM-DD</code></p>
-      </section>
-
-      <footer>
-        <span><strong>Source</strong> <a href="../../README.md">README.md</a> — edit Markdown, regenerate HTML</span>
-        <span><strong>Last converted</strong> 2026-07-01</span>
-      </footer>
-
-    </article>
-  </div>
-</div>
-</body>
+  </body>
 </html>
