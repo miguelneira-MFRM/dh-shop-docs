@@ -253,9 +253,9 @@
     <p class="deck">An in-store quiz and recommendations experience that helps Sleep Experts guide customers to ranked mattress and foundation pairings — with pricing, financing, delivery, and add-to-cart.</p>
     <div class="byline">
       <div class="byline-item"><strong>Audience</strong>Product owners, QA, engineers</div>
-      <div class="byline-item"><strong>Scope</strong>Matcher master app (~2,166 files)</div>
+      <div class="byline-item"><strong>Scope</strong>Matcher master app (~2,202 files)</div>
       <div class="byline-item"><strong>Validated</strong>2026-06-04 (prod UX)</div>
-      <div class="byline-item"><strong>Code sync</strong>Repomix 2026-06-25</div>
+      <div class="byline-item"><strong>Code sync</strong>Repomix 2026-07-23</div>
     </div>
   </header>
 
@@ -272,6 +272,7 @@
         <li><a href="#results-matches">Results / matches</a></li>
         <li><a href="#api-surface">API surface</a></li>
         <li><a href="#state-management">State management</a></li>
+        <li><a href="#store-switch">Store switch &amp; View Matcher</a></li>
         <li><a href="#new-vs-legacy">New vs legacy</a></li>
         <li><a href="#context-file-map">Context file map</a></li>
         <li><a href="#live-validation">Live validation</a></li>
@@ -282,7 +283,7 @@
 
     <article>
 
-      <p class="article-intro">This repo (<a href="README.html">README</a>) is a <strong>knowledge hub</strong>, not the app itself. The overview below mirrors the <strong>Matcher master app repo</strong> (~2,166 files, Next.js at <code>/mattressmatcher</code>).</p>
+      <p class="article-intro">This repo (<a href="README.html">README</a>) is a <strong>knowledge hub</strong>, not the app itself. The overview below mirrors the <strong>Matcher master app repo</strong> (~2,202 files, Next.js at <code>/mattressmatcher</code>).</p>
 
       <section id="what-app-does">
         <h2><span class="section-num">§ 01 — Overview</span>What the app does</h2>
@@ -413,11 +414,11 @@ flowchart TB
               <li><strong><code>fetch</code></strong> — Fresh quiz submit or no cache/preload → proceed to API</li>
             </ul>
           </li>
-          <li><strong>Build API payload</strong> — On <code>fetch</code> path only: <code>formatNewRecommendationsPayload()</code> maps quiz answers to <code>MatchesRecommendationsPayload</code>.</li>
+          <li><strong>Build API payload</strong> — On <code>fetch</code> path only: <code>formatNewRecommendationsPayload()</code> maps quiz answers to <code>MatchesRecommendationsPayload</code>. When <code>enableMatchesBudgetToggleNewDesign</code> is on, <code>applyMatchesTryInStorePayload</code> adds <code>isAvailableTryInStore</code> from the try-in-store toggle.</li>
           <li><strong>Fetch matches</strong> — Client POST to <code>/mattressmatcher/api/matches</code>.</li>
           <li><strong>Server processing</strong> — <code>/api/matches</code> → external Matches API (V2) + foundation accessory mappings.</li>
           <li><strong>Map to UI</strong> — <code>mapNewQuizResponseToMatches()</code> → top 3 mattress + base pairings with why-it-works, financing, delivery.</li>
-          <li><strong>Show matches</strong> — Header tabs switch to <strong>post-quiz mode</strong>: <code>matcher quiz</code> | <code>matches</code> | <code>mattresses</code> | <code>foundations</code> | <code>bedding</code>. Matches tab shows <strong>"your customer's Top Matches"</strong>, a <strong>Matcher Summary</strong> narrative, 3 pairings with <strong>Add Both To Cart</strong>, <strong>Pair &amp; save</strong> financing (via <code>useFinancingOffer</code> + config tiers), optional <strong>try-in-store</strong> toggle, and <strong>View All Mattress/Foundation Matches</strong> links.</li>
+          <li><strong>Show matches</strong> — Header tabs switch to <strong>post-quiz mode</strong>: <code>matcher quiz</code> | <code>matches</code> | <code>mattresses</code> | <code>foundations</code> | <code>bedding</code>. Matches tab shows <strong>"your customer's Top Matches"</strong>, a <strong>Matcher Summary</strong> narrative, 3 pairings with <strong>Add Both To Cart</strong>, <strong>Pair &amp; save</strong> financing (via <code>useFinancingOffer</code> + config tiers), optional <strong>try-in-store</strong> toggle, <strong>View Budget Matches</strong> (when budget preference allows), and <strong>View All Mattress/Foundation Matches</strong> links.</li>
         </ol>
 
         <div class="diagram">
@@ -461,6 +462,7 @@ sequenceDiagram
               <tr><td><code>dreamhub-navigation</code> context</td><td>Active header tab, quiz vs non-quiz modes</td></tr>
               <tr><td><code>resolveMatchesInitAction</code></td><td>Decides profile-preload, cache restore, or fresh fetch on Matches tab mount</td></tr>
               <tr><td><code>formatNewRecommendationsPayload</code></td><td>Quiz → API contract translation</td></tr>
+              <tr><td><code>applyMatchesTryInStorePayload</code></td><td>Optionally adds <code>isAvailableTryInStore</code> when budget-toggle new design is on</td></tr>
               <tr><td><code>/api/matches</code></td><td>BFF for V2 recommender + foundation mapping</td></tr>
               <tr><td><code>mapNewQuizResponseToMatches</code></td><td>API products → match cards with reasons/pricing</td></tr>
               <tr><td><code>useFinancingOffer</code></td><td>Client-side monthly payment copy from <code>appConfig.financingTiers</code> (no API)</td></tr>
@@ -535,7 +537,8 @@ sequenceDiagram
               <li><strong>3 match pairings</strong> — mattress + foundation side-by-side, <strong>Match</strong> badge, add-to-cart, financing, try-in-store, delivery</li>
               <li><strong>"Why this match works for your customer"</strong> — attribute chips (e.g. Cooling, Pressure Relief)</li>
               <li><strong>Add Both To Cart</strong> per pairing; <strong>Pair &amp; save</strong> combined financing (computed client-side via <code>useFinancingOffer</code> from App Config tiers — distinct from page-load <code>GET /api/financing</code>)</li>
-              <li><strong>Try-in-store toggle</strong> — Filters match pairings to in-store-tryable SKUs; may show a fallback banner when fallback foundation SKUs (D365 IDs starting with <code>F</code>) appear in the active slice</li>
+              <li><strong>Try-in-store toggle</strong> — Filters match pairings to in-store-tryable SKUs; may show a fallback banner when fallback foundation SKUs (D365 IDs starting with <code>F</code>) appear in the active slice. When <code>enableMatchesBudgetToggleNewDesign</code> is on, the toggle value is also sent to the recommender as <code>isAvailableTryInStore</code></li>
+              <li><strong>View Budget Matches</strong> — Re-slices the same recommendation list (no second matches API call). Indexing differs when the budget-toggle new design flag is on (separate best/budget bands, optionally driven by API <code>budgetIndexStart</code>, split further by try-in-store vs online)</li>
               <li><strong>FirmCare nudge:</strong> <em>"Protect your investment. Protect your sleep. Learn More"</em></li>
               <li><strong>View All Mattress Matches</strong> / <strong>View All Foundation Matches</strong> buttons</li>
             </ul>
@@ -581,8 +584,8 @@ sequenceDiagram
               <tr><td><strong>Matching (legacy)</strong></td><td><code>POST /api/recommendedProducts</code> (V1)</td></tr>
               <tr><td><strong>Commerce</strong></td><td><code>/api/cartManagement</code>, <code>/api/createCart</code>, <code>/api/atpCache</code></td></tr>
               <tr><td><strong>Enrichment</strong></td><td><code>/api/productRatings</code>, <code>/api/productPromos</code>, <code>/api/productXRayDetail</code></td></tr>
-              <tr><td><strong>Try-in-store</strong></td><td><code>GET /api/getTryInStoreData</code> — enriches adjustable bases with per-store try-in-store flags (chained after <code>recommendedAccessories</code>)</td></tr>
-              <tr><td><strong>Shell / catalog</strong></td><td><code>/api/financing</code>, <code>/api/defaultMessaging</code>, <code>/api/accessoryMapping</code>, <code>/api/recommendedAccessories</code></td></tr>
+              <tr><td><strong>Try-in-store</strong></td><td><code>GET /api/getTryInStoreData</code> — enriches adjustable bases with per-store try-in-store flags (chained after <code>recommendedAccessories</code>); optional <code>isAvailableTryInStore</code> on <code>POST /api/matches</code> and <code>POST /api/updateTopItems</code> when budget-toggle new design is on</td></tr>
+              <tr><td><strong>Shell / catalog</strong></td><td><code>/api/financing</code>, <code>/api/defaultMessaging</code>, <code>/api/accessoryMapping</code>, <code>/api/recommendedAccessories</code>, <code>/api/zipCodeSE</code> (also after My Store switch)</td></tr>
               <tr><td><strong>Platform</strong></td><td><code>/api/trpc/[trpc]</code> (Unbxd PLP, productDetails, Unify, CPOS cart)</td></tr>
             </tbody>
           </table>
@@ -617,8 +620,35 @@ sequenceDiagram
         <p>Answers and navigation persist in <strong>session storage</strong> (<code>storageKeys.ts</code>).</p>
       </section>
 
+      <section id="store-switch">
+        <h2><span class="section-num">§ 09 — Store switch</span>Store switch &amp; View Matcher entry (2026-07-23)</h2>
+
+        <h3>Feature: My Store update side effects</h3>
+        <p class="lede">After a Sleep Expert changes My Store, Matcher realigns tabs, quiz landing, and zip so legacy and new-matcher stores do not share incompatible recommendation edit state.</p>
+
+        <h4>What the associate sees</h4>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Situation</th><th>Outcome</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Switching <strong>to a legacy store</strong> while a <strong>V2 edit session</strong> is active</td><td>Immediate redirect to the legacy store experience (before UI remounts with V2 edit state)</td></tr>
+              <tr><td>Cart has items</td><td>Forced toward the <strong>Mattresses</strong> tab</td></tr>
+              <tr><td>Next store is <strong>new matcher</strong></td><td>Lands on <strong>Matcher Quiz</strong> with quiz forced on mount</td></tr>
+              <tr><td>Otherwise</td><td>Store/expert context updates; zip refreshes via <code>GET /api/zipCodeSE</code></td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p>V2 edit session = current store is new-matcher <strong>or</strong> URL has <code>recommenderlogid</code> <strong>or</strong> session still holds a recommender log on customer/cart keys.</p>
+
+        <h3>Feature: View Matcher session reset</h3>
+        <p>When SSR detects a customer-record vs store-experience mismatch (<code>shouldResetViewMatcherSession</code>), the client clears the matcher session and redirects to the URL <strong>without</strong> the recommender log id (legacy and pilot paths). The client does not re-decide the rule — SSR owns that flag.</p>
+      </section>
+
       <section id="new-vs-legacy">
-        <h2><span class="section-num">§ 09 — Migration</span>New vs legacy</h2>
+        <h2><span class="section-num">§ 10 — Migration</span>New vs legacy</h2>
         <div class="table-wrap">
           <table>
             <thead>
@@ -637,7 +667,7 @@ sequenceDiagram
       </section>
 
       <section id="context-file-map">
-        <h2><span class="section-num">§ 10 — Context map</span>Context file map</h2>
+        <h2><span class="section-num">§ 11 — Context map</span>Context file map</h2>
         <p>When exploring in Cursor, <code>@</code>-reference these files:</p>
         <div class="table-wrap">
           <table>
@@ -658,7 +688,7 @@ sequenceDiagram
       </section>
 
       <section id="live-validation">
-        <h2><span class="section-num">§ 11 — Validation</span>Live site validation (2026-06-04)</h2>
+        <h2><span class="section-num">§ 12 — Validation</span>Live site validation (2026-06-04)</h2>
         <p>Validated on prod via headed Playwright against <a href="https://dreamhub.mattressfirm.com/">dreamhub.mattressfirm.com</a>.</p>
         <div class="table-wrap">
           <table>
@@ -682,7 +712,9 @@ sequenceDiagram
       </section>
 
       <section id="repomix-sync">
-        <h2><span class="section-num">§ 12 — Code sync</span>Repomix sync notes (2026-06-25)</h2>
+        <h2><span class="section-num">§ 13 — Code sync</span>Repomix sync notes</h2>
+
+        <h3>2026-06-25</h3>
         <p>Compared to the prior export (2026-06-03), routed changes are additive — no quiz copy or journey changes:</p>
         <div class="table-wrap">
           <table>
@@ -697,17 +729,34 @@ sequenceDiagram
             </tbody>
           </table>
         </div>
-        <p><strong>Not yet live-validated:</strong> <code>GET /api/getTryInStoreData</code> call order after accessories load; try-in-store toggle and fallback banners on prod.</p>
+
+        <h3>2026-07-23</h3>
+        <p>Compared to <code>2026-06-25</code> (~2,166 → ~2,202 files in export). Additive behavior for store switching and try-in-store payload:</p>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Area</th><th>What changed</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><strong>Matches try-in-store flag</strong></td><td><code>applyMatchesTryInStorePayload</code> — when <code>enableMatchesBudgetToggleNewDesign</code> is on, stamps <code>isAvailableTryInStore</code> onto <code>POST /api/matches</code> (and top-items follows the same gate)</td></tr>
+              <tr><td><strong>Budget / try-in-store slicing</strong></td><td>New design flag changes how View Budget Matches and try-in-store pick product indices (optional <code>budgetIndexStart</code> from API)</td></tr>
+              <tr><td><strong>My Store switch</strong></td><td><code>useApplyMyStoreUpdate</code> — V2→legacy redirect, cart → Mattresses tab, new-matcher → quiz landing, zip via <code>zipCodeSE</code></td></tr>
+              <tr><td><strong>View Matcher entry</strong></td><td><code>useLegacyViewMatcherRedirect</code> — SSR-gated session reset + strip recommender log from URL</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p><strong>Not yet live-validated:</strong> <code>GET /api/getTryInStoreData</code> call order; try-in-store toggle / fallback banners; <code>isAvailableTryInStore</code> on matches/top-items; My Store switch and View Matcher reset flows on prod.</p>
       </section>
 
       <section id="documentation-gaps">
-        <h2><span class="section-num">§ 13 — Gaps</span>Documentation gaps</h2>
-        <p>Overlays <code>04</code> and <code>06</code> are still placeholders; overlay <code>05</code> now covers matches-init and financing-offer hooks. API trigger timing is in <a href="matcher-api-triggers.html"><strong>matcher-api-triggers.html</strong></a>. Re-validate UX claims against prod after each repomix sync.</p>
+        <h2><span class="section-num">§ 14 — Gaps</span>Documentation gaps</h2>
+        <p>Overlays <code>04</code> and <code>06</code> are still placeholders; overlay <code>05</code> covers matches-init, financing-offer, My Store switch, and View Matcher reset. API trigger timing is in <a href="matcher-api-triggers.html"><strong>matcher-api-triggers.html</strong></a>. Re-validate UX claims against prod after each repomix sync.</p>
       </section>
 
       <footer>
         <span><strong>Maintainer</strong> Matcher knowledge hub — update after sprint sync or prod UX changes</span>
-        <span><strong>Last validated</strong> 2026-06-04 (prod UX) · code sync 2026-06-25</span>
+        <span><strong>Last validated</strong> 2026-06-04 (prod UX) · code sync 2026-07-23</span>
       </footer>
 
     </article>
@@ -776,6 +825,10 @@ sequenceDiagram
       const clone = svg.cloneNode(true);
       clone.removeAttribute('width');
       clone.removeAttribute('height');
+      // Mermaid injects inline style="max-width:XXXpx" on the rendered SVG.
+      // If left in place it caps the clone at the original render width and
+      // the diagram collapses inside the lightbox. Strip it and let the
+      // viewBox + container width drive sizing.
       clone.removeAttribute('style');
       clone.setAttribute('width', '100%');
       clone.setAttribute('height', '100%');

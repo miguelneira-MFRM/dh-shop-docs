@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>DreamHub Mattress Matcher — API Triggers</title>
+<title>DreamHub Mattress Matcher â€” API Triggers</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -708,7 +708,7 @@
     <div class="byline">
       <div class="byline-item"><strong>Audience</strong>Product, QA, Engineering</div>
       <div class="byline-item"><strong>Scope</strong>New matcher (<code>isNewMatcherEnabled</code>)</div>
-      <div class="byline-item"><strong>Validated</strong>Prod · 2026-06-04; code · 2026-06-25</div>
+      <div class="byline-item"><strong>Validated</strong>Prod · 2026-06-04; code · <strong>2026-07-23</strong></div>
       <div class="byline-item"><strong>Maintainer</strong>Matcher Knowledge Hub</div>
     </div>
   </header>
@@ -722,7 +722,8 @@
         <li><a href="#reference">Master reference</a></li>
         <li><a href="#timing">Timing summary</a></li>
         <li><a href="#try-in-store">Try-in-store</a></li>
-        <li><a href="#phases">Journey phases</a></li>
+        <li><a href="#phases">Journey phases (A–F)</a></li>
+        <li><a href="#phase-f">Phase F — My Store switch</a></li>
         <li><a href="#comparison">New vs legacy</a></li>
         <li><a href="#gaps">Gaps &amp; QA checklist</a></li>
         <li><a href="#validation">Live validation</a></li>
@@ -835,6 +836,14 @@ flowchart TB
                 </div>
               </div>
               <div class="route">
+                <div class="route-head"><code class="route-path">/api/getTryInStoreData</code><span class="method get">GET</span></div>
+                <div class="route-meta">
+                  <div class="route-meta-row"><span class="route-meta-label">Upstream</span><span class="route-meta-value">Azure Spring (<code>tryInStore</code> on products)</span></div>
+                  <div class="route-meta-row"><span class="route-meta-label">Trigger</span><span class="route-meta-value">After adjustable bases load; re-fires on store change</span></div>
+                  <div class="route-meta-row"><span class="route-meta-label">Caller</span><span class="route-meta-value"><code>RecommendedAccessoriesProvider</code></span></div>
+                </div>
+              </div>
+              <div class="route">
                 <div class="route-head"><code class="route-path">/api/accessorySizeMapping</code><span class="method get">GET</span></div>
                 <div class="route-meta">
                   <div class="route-meta-row"><span class="route-meta-label">Upstream</span><span class="route-meta-value">Size mapping service</span></div>
@@ -870,8 +879,8 @@ flowchart TB
                 <div class="route-head"><code class="route-path">/api/zipCodeSE</code><span class="method get">GET</span></div>
                 <div class="route-meta">
                   <div class="route-meta-row"><span class="route-meta-label">Upstream</span><span class="route-meta-value">Store default zip</span></div>
-                  <div class="route-meta-row"><span class="route-meta-label">Trigger</span><span class="route-meta-value">Store number lookup</span></div>
-                  <div class="route-meta-row"><span class="route-meta-label">Caller</span><span class="route-meta-value">Unify navigation hook</span></div>
+                  <div class="route-meta-row"><span class="route-meta-label">Trigger</span><span class="route-meta-value">Store number lookup; also after My Store / setMyStore succeeds (<code>useApplyMyStoreUpdate</code>)</span></div>
+                  <div class="route-meta-row"><span class="route-meta-label">Caller</span><span class="route-meta-value">Unify navigation hook; <code>useApplyMyStoreUpdate</code></span></div>
                 </div>
               </div>
             </div>
@@ -884,16 +893,16 @@ flowchart TB
                 <div class="route-head"><code class="route-path">/api/matches</code><span class="method post">POST</span></div>
                 <div class="route-meta">
                   <div class="route-meta-row"><span class="route-meta-label">Upstream</span><span class="route-meta-value">Recommender V2 + D365 foundation mappings</span></div>
-                  <div class="route-meta-row"><span class="route-meta-label">Trigger</span><span class="route-meta-value">Matches tab mounts after quiz submit; manual refresh; re-edit</span></div>
-                  <div class="route-meta-row"><span class="route-meta-label">Caller</span><span class="route-meta-value"><code>useMatchesRecommendations</code></span></div>
+                  <div class="route-meta-row"><span class="route-meta-label">Trigger</span><span class="route-meta-value">Matches tab mounts after quiz submit; manual refresh; re-edit. When <code>enableMatchesBudgetToggleNewDesign</code> is on, body includes optional <code>isAvailableTryInStore</code> via <code>applyMatchesTryInStorePayload</code></span></div>
+                  <div class="route-meta-row"><span class="route-meta-label">Caller</span><span class="route-meta-value"><code>useMatchesRecommendations</code> → <code>getNewQuizRecommendedProductsClientSide</code></span></div>
                 </div>
               </div>
               <div class="route">
                 <div class="route-head"><code class="route-path">/api/updateTopItems</code><span class="method post">POST</span></div>
                 <div class="route-meta">
                   <div class="route-meta-row"><span class="route-meta-label">Upstream</span><span class="route-meta-value">Recommender top-items API</span></div>
-                  <div class="route-meta-row"><span class="route-meta-label">Trigger</span><span class="route-meta-value">After matches fetch; toggling View Budget Matches</span></div>
-                  <div class="route-meta-row"><span class="route-meta-label">Caller</span><span class="route-meta-value"><code>fireUpdateTopItems</code></span></div>
+                  <div class="route-meta-row"><span class="route-meta-label">Trigger</span><span class="route-meta-value">After successful matches fetch; toggling View Budget Matches. Same flag gates optional <code>isAvailableTryInStore</code> on the top-items body</span></div>
+                  <div class="route-meta-row"><span class="route-meta-label">Caller</span><span class="route-meta-value"><code>useMatchesRecommendations.fireUpdateTopItems</code></span></div>
                 </div>
               </div>
             </div>
@@ -1047,6 +1056,35 @@ flowchart TB
 
         </div>
 
+        <h4>Client-side only (no BFF route)</h4>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Hook / helper</th><th>Trigger</th><th>Output</th></tr></thead>
+            <tbody>
+              <tr>
+                <td><code>useFinancingOffer</code></td>
+                <td>Match card render (<code>MatchesCard</code>), PLP tiles needing tier copy</td>
+                <td><code>getFinancingOffer(price)</code> → <code>IFinancingOffer</code> from <code>appConfig.financingTiers</code> (fallback: <code>DEFAULT_FINANCING_TIERS</code>). <strong>Distinct from</strong> page-load <code>GET /api/financing</code>.</td>
+              </tr>
+              <tr>
+                <td><code>applyMatchesTryInStorePayload</code></td>
+                <td>Before <code>POST /api/matches</code> when building payload</td>
+                <td>Stamps <code>isAvailableTryInStore</code> when <code>enableMatchesBudgetToggleNewDesign</code> is on; otherwise returns payload unchanged</td>
+              </tr>
+              <tr>
+                <td><code>shouldShowTryInStoreFallbackBanner</code></td>
+                <td>Category PLP with Try In-Store filter active; all visible products online-only for store</td>
+                <td>UI banner — no network</td>
+              </tr>
+              <tr>
+                <td><code>shouldShowMatchesTryInStoreFallbackBanner</code></td>
+                <td>Matches tab when fallback SKUs (<code>F…</code> D365 IDs) in active pairing slice</td>
+                <td>UI banner — no network</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
         <h4>Not used on the new matcher primary path</h4>
         <div class="table-wrap">
           <table>
@@ -1112,7 +1150,7 @@ flowchart TB
         </div>
       </section>
 
-      <!-- ===== Section: Try-in-store ===== -->
+      <!-- ===== Section 4: Try-in-store ===== -->
       <section id="try-in-store">
         <h2><span class="section-num">§ 04 — Enrichment</span>Try-in-store enrichment (2026-06-25)</h2>
 
@@ -1129,12 +1167,25 @@ flowchart TB
           </table>
         </div>
 
-        <blockquote><p><strong>Live validation:</strong> <code>getTryInStoreData</code> and fallback banners not yet confirmed on prod (2026-06-04 capture predates this route).</p></blockquote>
+        <h3>Matches / top-items request flag (2026-07-23)</h3>
+        <p>When feature flag <strong><code>enableMatchesBudgetToggleNewDesign</code></strong> is on:</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Call</th><th>What changes</th></tr></thead>
+            <tbody>
+              <tr><td><code>POST /api/matches</code></td><td><code>applyMatchesTryInStorePayload</code> stamps <code>isAvailableTryInStore</code> (current Matches try-in-store toggle) onto the body. Flag off → payload unchanged</td></tr>
+              <tr><td><code>POST /api/updateTopItems</code></td><td>Same optional field forwarded to Mulesoft when the flag is on</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>No new BFF route — same contracts, optional field only. Recommender / top-items can use the flag for ranking or logging.</p>
+
+        <blockquote><p><strong>Live validation:</strong> <code>getTryInStoreData</code>, fallback banners, and <code>isAvailableTryInStore</code> on matches/top-items not yet confirmed on prod (2026-06-04 capture predates these routes/fields).</p></blockquote>
       </section>
 
       <!-- ===== Section 5: Phases ===== -->
       <section id="phases">
-        <h2><span class="section-num">§ 05 — Journey</span>Five phases, end to end</h2>
+        <h2><span class="section-num">§ 05 — Journey</span>Six phases, end to end</h2>
 
         <!-- Phase A -->
         <div class="phase">
@@ -1178,6 +1229,20 @@ sequenceDiagram
   end
             </div>
           </div>
+
+          <h4>System components used</h4>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Component</th><th>Role</th></tr></thead>
+              <tbody>
+                <tr><td><code>FinancingDetailProvider</code></td><td>Loads monthly payment thresholds for product cards</td></tr>
+                <tr><td><code>useGetAvailabilityMessages</code></td><td>Delivery lead-time copy for drop-ship messaging</td></tr>
+                <tr><td><code>RecommendedAccessoriesProvider</code></td><td>Foundation catalog lists; chains <code>getTryInStoreData</code> to enrich adjustable bases</td></tr>
+                <tr><td><code>AccessorySizeMappingProvider</code></td><td>Size mappings required before matches payload</td></tr>
+                <tr><td><code>CartProvider</code></td><td>D365 basket initialization</td></tr>
+              </tbody>
+            </table>
+          </div>
         </div>
 
         <!-- Phase B -->
@@ -1203,14 +1268,15 @@ sequenceDiagram
 
           <ol>
             <li><code>useMatchesRecommendations</code> mounts with the Matches tab.</li>
-            <li><strong>Cache check:</strong> If session has a <code>recommenderLogId</code> and the quiz was not just re-submitted → restore from session cache (<strong>no network</strong>).</li>
+            <li><strong><code>resolveMatchesInitAction</code></strong> picks one of: <code>skip</code>, <code>profile-preload</code> (prior profile log, first entry only), <code>restore-cache</code> (session <code>recommenderLogId</code>), or <code>fetch</code> (fresh submit / no cache).</li>
+            <li><strong>Cache / preload paths:</strong> Profile preload or session restore → <strong>no network</strong> (quiz re-submit always forces <code>fetch</code>).</li>
             <li><strong>Fresh fetch:</strong> <code>formatNewRecommendationsPayload()</code> translates quiz answers → <code>MatchesRecommendationsPayload</code>.</li>
-            <li>Client POST to <code>/api/matches</code> (with optional <code>?refresh=true</code>).</li>
+            <li>Client POST to <code>/api/matches</code> (with optional <code>?refresh=true</code> on manual refresh).</li>
             <li>BFF validates payload (422 if <code>customerResponses.mattressSize</code> missing).</li>
             <li>BFF POST to Recommender V2; server-side <code>getRelatedVariants</code> adds foundation accessory mappings.</li>
             <li>Response mapped to top 3 pairings via <code>mapNewQuizResponseToMatches</code>.</li>
-            <li>Fire-and-forget <code>POST /api/updateTopItems</code> records top item IDs.</li>
-            <li>Unify analytics events fire when <code>quizSubmitSuccess</code> was true.</li>
+            <li>Fire-and-forget <code>POST /api/updateTopItems</code> records top item IDs with the recommender log.</li>
+            <li>Unify analytics events fire when <code>quizSubmitSuccess</code> was true (fresh submission).</li>
           </ol>
 
           <div class="diagram">
@@ -1247,11 +1313,30 @@ sequenceDiagram
             <table>
               <thead><tr><th>Behavior</th><th>Detail</th></tr></thead>
               <tbody>
-                <tr><td><strong>View Budget Matches</strong></td><td>Client-side re-index of existing products (indices 3, 1, 4 vs 0, 1, 2) + <code>updateTopItems</code> — no second <code>/api/matches</code> call</td></tr>
+                <tr><td><strong>Init action</strong></td><td><code>resolveMatchesInitAction</code> — <code>profile-preload</code> on first View Matcher entry with prior profile log; <code>restore-cache</code> when session has log; <code>fetch</code> on fresh quiz submit. Mount-only — tab switches do not re-run.</td></tr>
+                <tr><td><strong>View Budget Matches</strong></td><td>Client-side re-index of existing products + <code>updateTopItems</code> — <strong>no second <code>/api/matches</code> call</strong>. Indexing depends on <code>enableMatchesBudgetToggleNewDesign</code>: <strong>flag off</strong> → indices <code>[3, 1, 4]</code> vs <code>[0, 1, 2]</code>; <strong>flag on</strong> → separate best/budget slices (optionally from API <code>budgetIndexStart</code>), further split by try-in-store vs online</td></tr>
+                <tr><td><strong>Try-in-store toggle</strong></td><td>Client-side filter on match pairings; may show fallback banner via <code>shouldShowMatchesTryInStoreFallbackBanner</code>. When budget-toggle new design is on, toggle value is also sent as <code>isAvailableTryInStore</code> on matches/top-items requests</td></tr>
                 <tr><td><strong>Manual refresh</strong></td><td><code>refresh()</code> re-calls <code>/api/matches</code> with <code>?refresh=true</code></td></tr>
-                <tr><td><strong>Re-edit session</strong></td><td>Payload includes <code>action: 'edit - view/edit'</code> and <code>inboundRecommenderLogId</code></td></tr>
+                <tr><td><strong>Re-edit session</strong></td><td>Payload includes <code>action: 'edit - view/edit'</code> and <code>inboundRecommenderLogId</code> when prior log exists</td></tr>
                 <tr><td><strong>Late accessories</strong></td><td>If foundation lists load after matches, client re-pairs without API</td></tr>
                 <tr><td><strong>422 guard</strong></td><td>Missing mattress size rejected at BFF before upstream call</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h4>System components used</h4>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Component</th><th>Role</th></tr></thead>
+              <tbody>
+                <tr><td><code>resolveMatchesInitAction</code></td><td>Mount-time fetch vs cache vs profile-preload decision</td></tr>
+                <tr><td><code>formatNewRecommendationsPayload</code></td><td>Quiz answers → Recommender V2 contract</td></tr>
+                <tr><td><code>applyMatchesTryInStorePayload</code></td><td>Optionally stamps <code>isAvailableTryInStore</code> on matches body when budget-toggle new design is on</td></tr>
+                <tr><td><code>/api/matches</code></td><td>BFF proxy + foundation mapping</td></tr>
+                <tr><td><code>mapNewQuizResponseToMatches</code></td><td>API products → match cards with reasons and pricing</td></tr>
+                <tr><td><code>useFinancingOffer</code></td><td>Client-side Pair &amp; save financing copy on match cards</td></tr>
+                <tr><td><code>getNewQuizRecommendedProductsClientSide</code></td><td>Client fetch + 1-hour memory cache</td></tr>
+                <tr><td><code>updateTopItemsClientSide</code></td><td>Records viewed top items with recommender</td></tr>
               </tbody>
             </table>
           </div>
@@ -1327,15 +1412,64 @@ sequenceDiagram
             </table>
           </div>
 
+          <h4>Search</h4>
+          <ol>
+            <li>Search term stored in <code>dreamhub-search</code> context (session storage).</li>
+            <li>Search results render via tRPC <code>getUnbxdResults</code> with <code>queryType: 'search'</code>.</li>
+            <li>Result click → same PDP flow as above.</li>
+          </ol>
+
           <blockquote>
             <p><strong>ATP note (new vs legacy).</strong> Bulk automatic <code>fetchATPCache</code> on mattress list or zip change is <strong>disabled</strong> when <code>isNewMatcherEnabled</code> is true. Delivery dates load on demand per variant interaction instead.</p>
           </blockquote>
         </div>
+
+        <!-- Phase F -->
+        <div class="phase" id="phase-f">
+          <p class="phase-label">Phase F · 2026-07-23</p>
+          <h3>My Store switch and View Matcher entry reset</h3>
+          <p class="lede">When a Sleep Expert changes My Store (or lands on Matcher with a mismatched customer/store experience), the app realigns navigation, zip, and session so legacy and new-matcher stores do not share incompatible edit state.</p>
+
+          <h4>My Store update (<code>useApplyMyStoreUpdate</code>)</h4>
+          <ol>
+            <li>setMyStore / getMyStore (or dev mock) succeeds with the next store’s <code>isNewMatcherEnabled</code>.</li>
+            <li><strong>V2 → legacy while edit session active:</strong> Immediate redirect via <code>performV2ToLegacyStoreSwitch</code> <strong>before</strong> React state updates (avoids mounting legacy with V2 edit state). No further client side effects in that path.</li>
+            <li><strong>Cart has items:</strong> Force navigation toward the Mattresses tab (legacy vs new matcher tab keys differ).</li>
+            <li><strong>Next store is new matcher:</strong> Force quiz-on-mount and land on Matcher Quiz tab.</li>
+            <li><strong>Non-redirect path:</strong> Update sleep-expert / store number state; refresh zip via <strong><code>GET /api/zipCodeSE</code></strong>.</li>
+          </ol>
+          <p>V2 edit session = current store is new-matcher <strong>or</strong> URL has <code>recommenderlogid</code> <strong>or</strong> session storage still holds a recommender log on customer/cart keys.</p>
+
+          <h4>View Matcher entry reset (<code>useLegacyViewMatcherRedirect</code>)</h4>
+          <ol>
+            <li>SSR sets <code>shouldResetViewMatcherSession</code> when the customer record and store experience mismatch.</li>
+            <li>Client hook runs <strong>only</strong> when that SSR flag is true (never re-evaluates the rule itself).</li>
+            <li>Resets legacy or pilot matcher session, then redirects to the URL <strong>without</strong> the recommender log id.</li>
+          </ol>
+
+          <h4>System components used</h4>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Component</th><th>Role</th></tr></thead>
+              <tbody>
+                <tr><td><code>useApplyMyStoreUpdate</code></td><td>Post–My Store side effects: redirect, tab landing, zip refresh</td></tr>
+                <tr><td><code>useLegacyViewMatcherRedirect</code></td><td>SSR-gated session clear + stripped-URL redirect</td></tr>
+                <tr><td><code>GET /api/zipCodeSE</code></td><td>Store default zip after successful store switch</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h4>Dependencies &amp; blockers</h4>
+          <ul>
+            <li>Correct <code>isNewMatcherEnabled</code> on the destination store profile.</li>
+            <li>Session storage and URL query must accurately reflect any active recommender edit session.</li>
+          </ul>
+        </div>
       </section>
 
-      <!-- ===== Section 5: Comparison ===== -->
+      <!-- ===== Section 6: Comparison ===== -->
       <section id="comparison">
-        <h2><span class="section-num">§ 05 — Contrast</span>New vs legacy</h2>
+        <h2><span class="section-num">§ 06 — Contrast</span>New vs legacy</h2>
 
         <div class="table-wrap">
           <table>
@@ -1352,9 +1486,9 @@ sequenceDiagram
         </div>
       </section>
 
-      <!-- ===== Section 6: Gaps ===== -->
+      <!-- ===== Section 7: Gaps ===== -->
       <section id="gaps">
-        <h2><span class="section-num">§ 06 — QA</span>Known gaps &amp; validation checklist</h2>
+        <h2><span class="section-num">§ 07 — QA</span>Known gaps &amp; validation checklist</h2>
         <p>Use this checklist when validating against prod or after the next repomix sync.</p>
 
         <div class="table-wrap">
@@ -1366,24 +1500,34 @@ sequenceDiagram
               <tr><td>3</td><td>Search tab Unbxd caller</td><td>Walk search flow; confirm <code>queryType: search</code></td><td>Not tested — autosuggest fires on load</td></tr>
               <tr><td>4</td><td><code>NewMatcherAtpSession</code> dedup helpers</td><td>Confirm ATP not duplicated on tab switches</td><td>Partial — single matches call; ATP not re-checked</td></tr>
               <tr><td>5</td><td>CPOS vs D365 cart path</td><td>Verify active flag in target environment</td><td><strong>Not observed</strong> — no cart calls in session</td></tr>
+              <tr><td>6</td><td><code>getTryInStoreData</code> after accessories load</td><td>Cold load → confirm chained GET after <code>recommendedAccessories</code> with store ID</td><td><strong>Not tested</strong> — route added 2026-06-25; predates live capture</td></tr>
+              <tr><td>7</td><td>Try-in-store toggle + fallback banners</td><td>Complete quiz → toggle try-in-store on Matches; apply Try In-Store filter on PLP</td><td><strong>Not tested</strong> — UI helpers added 2026-06-25</td></tr>
+              <tr><td>8</td><td><code>isAvailableTryInStore</code> on matches / top-items</td><td>With <code>enableMatchesBudgetToggleNewDesign</code> on → View Matches and toggle try-in-store; confirm field on both POSTs</td><td><strong>Not tested</strong> — added 2026-07-23</td></tr>
+              <tr><td>9</td><td>My Store switch side effects</td><td>Switch to legacy store mid V2 edit; switch to new-matcher store with cart; confirm zipCodeSE + tab landing</td><td><strong>Not tested</strong> — hooks added 2026-07-23</td></tr>
+              <tr><td>10</td><td>View Matcher session reset</td><td>Land with SSR <code>shouldResetViewMatcherSession</code>; confirm redirect strips recommender log id</td><td><strong>Not tested</strong> — hook added 2026-07-23</td></tr>
             </tbody>
           </table>
         </div>
 
         <h4>Suggested live validation flow (Playwright)</h4>
         <ol>
-          <li>Cold load → note eager shell APIs.</li>
-          <li>Complete quiz → <strong>View Matches</strong> → confirm <code>POST /api/matches</code> then <code>POST /api/updateTopItems</code>.</li>
+          <li>Cold load → note eager shell APIs (include chained <code>getTryInStoreData</code> if store context present).</li>
+          <li>Complete quiz → <strong>View Matches</strong> → confirm <code>POST /api/matches</code> then <code>POST /api/updateTopItems</code> (with <code>isAvailableTryInStore</code> if budget-toggle new design flag is on).</li>
           <li>Switch to mattresses tab → confirm tRPC <code>getUnbxdResults</code>.</li>
           <li>Return to matches tab → confirm <strong>no</strong> repeat <code>/api/matches</code> (cache restore).</li>
           <li>Open PDP → confirm <code>productDetails</code>, <code>productPromos</code>, optional <code>atpCache</code>.</li>
           <li>Add to cart → confirm CPOS tRPC or <code>POST /api/cartManagement</code>.</li>
+          <li>(Optional) Change My Store → confirm <code>zipCodeSE</code> and tab/landing behavior per Phase F.</li>
         </ol>
+
+        <blockquote>
+          <p>Live validation requires an authenticated Sleep Expert session on <a href="https://dreamhub.mattressfirm.com/">dreamhub.mattressfirm.com</a>. See <a href="#validation">Live validation</a> below.</p>
+        </blockquote>
       </section>
 
-      <!-- ===== Section 7: Live validation ===== -->
+      <!-- ===== Section 8: Live validation ===== -->
       <section id="validation">
-        <h2><span class="section-num">§ 07 — Field report</span>Live validation</h2>
+        <h2><span class="section-num">§ 08 — Field report</span>Live validation</h2>
 
         <p><strong>Environment.</strong> <a href="https://dreamhub.mattressfirm.com/">dreamhub.mattressfirm.com</a> prod · Store <strong>132002</strong> · Sleep Expert <strong>149651286</strong> · Playwright network capture · <strong>2026-06-04</strong>.</p>
 
@@ -1466,15 +1610,26 @@ sequenceDiagram
         <h4>Deviations &amp; follow-ups</h4>
         <ul>
           <li><strong><code>accessoryMapping</code> GET</strong> not seen — may be gated by <code>enableCRTAccessories</code> flag.</li>
+          <li><strong><code>getTryInStoreData</code></strong> not seen in 2026-06-04 capture — route added in repomix 2026-06-25; re-validate on next prod walkthrough.</li>
+          <li><strong><code>isAvailableTryInStore</code> on matches/top-items</strong> — added 2026-07-23 behind <code>enableMatchesBudgetToggleNewDesign</code>; not in live capture.</li>
+          <li><strong>My Store switch / View Matcher reset</strong> — <code>useApplyMyStoreUpdate</code> and <code>useLegacyViewMatcherRedirect</code> (2026-07-23); not exercised in live capture.</li>
           <li><strong>Cart init</strong> (<code>createCart</code> / <code>cartManagement</code>) not seen — cart may use CPOS/tRPC path or initialize elsewhere in DreamHub shell.</li>
           <li><strong>Search PLP</strong> (<code>queryType: search</code>) not exercised — only autosuggest on header search mount.</li>
           <li><strong>Product ratings</strong> — no standalone <code>GET /api/productRatings</code> on PDP open; reviews render from <code>productDetails</code> response.</li>
           <li><strong>Add to cart</strong> not exercised — run separately to confirm CPOS vs D365 path.</li>
         </ul>
+
+        <h4>Related docs</h4>
+        <ul>
+          <li><a href="matcher-app-overview.html">Matcher app overview</a> — product flows, UI copy, quiz journeys</li>
+          <li><code>context/03-matcher-logic-and-api.md</code> — BFF route source code</li>
+          <li><code>context/05-state-and-context.md</code> — React contexts and hook implementations</li>
+          <li><code>context/07-legacy-low-priority.md</code> — legacy V1 behavior only</li>
+        </ul>
       </section>
 
       <footer>
-        <p>DreamHub Engineering · Mattress Matcher Knowledge Hub · Last validated 2026-06-04</p>
+        <p>DreamHub Engineering · Mattress Matcher Knowledge Hub · Validated prod 2026-06-04 · Code sync 2026-06-25 / <strong>2026-07-23</strong></p>
       </footer>
 
     </article>
@@ -1486,7 +1641,7 @@ sequenceDiagram
     startOnLoad: true,
     theme: 'base',
     themeVariables: {
-      fontFamily: 'Inter, sans-serif',
+      fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif',
       fontSize: '13px',
       primaryColor: '#f4f3ee',
       primaryTextColor: '#191817',

@@ -190,21 +190,20 @@
 
       <section id="quick-start">
         <h2><span class="section-num">§ 02 — Workflow</span>Quick start</h2>
-        <ol>
-          <li>Export repomix from the Matcher <strong>master app repo</strong> (see <code>config/repomix.config.json</code>)</li>
-          <li>Save to <code>inbox/repomix-YYYY-MM-DD.xml</code></li>
-          <li>Eyeball the <a href="#healthy-export-check">healthy export check</a> below</li>
-          <li>In Cursor: invoke the sync skill — <strong>"Sync context from latest repomix"</strong></li>
-          <li>Review <code>context/CHANGELOG.md</code> and update <code>overlays/</code> if behavior changed</li>
-        </ol>
+        <p>Preferred path — one command from this hub (requires the local master clone; see <code>config/master-export.json</code>):</p>
+        <pre><code>npm run refresh-from-master</code></pre>
+        <p>That pulls latest <code>master</code>, runs repomix, applies the <a href="#healthy-export-check">healthy export check</a>, copies to <code>inbox/repomix-YYYY-MM-DD.xml</code>, then runs the existing sync. It does <strong>not</strong> commit — review <code>context/CHANGELOG.md</code> / <code>overlays/</code> first.</p>
+        <p>Useful flags (PowerShell — call the script via npx so flags are not eaten by npm):</p>
+        <pre><code>npx tsx scripts/refresh-from-master.ts --skip-pull
+npx tsx scripts/refresh-from-master.ts --skip-sync
+npx tsx scripts/refresh-from-master.ts --date 2026-07-23</code></pre>
 
-        <h3>Cursor invocation (primary)</h3>
-        <p>In this project's Cursor window, start a new chat and say exactly:</p>
+        <h3>Cursor invocation (sync only)</h3>
+        <p>If the dated XML is already in <code>inbox/</code>, start a new chat and say:</p>
         <blockquote><p><strong>Sync context from latest repomix</strong></p></blockquote>
 
         <h3>Manual fallback</h3>
-        <pre><code>cd c:\MFRM\Cursor\matcher-knowledge-hub
-npm run sync
+        <pre><code>npm run sync
 # or with an explicit file:
 npm run sync -- inbox/repomix-2026-06-03.xml</code></pre>
         <p>Step-by-step:</p>
@@ -237,7 +236,7 @@ npx tsx scripts/generate-context.ts inbox/repomix-YYYY-MM-DD.xml</code></pre>
               <tr><th>Check</th><th>Expected</th></tr>
             </thead>
             <tbody>
-              <tr><td>Total <code>&lt;file&gt;</code> entries in repomix XML</td><td>~2,100 (full master-repo export)</td></tr>
+              <tr><td>Total <code>&lt;file&gt;</code> entries in repomix XML</td><td>~2,200 (full master-repo export)</td></tr>
               <tr><td>Routed into context buckets</td><td>~850</td></tr>
               <tr><td>Key paths present</td><td><code>src/pages/index.tsx</code>, <code>src/pages/results.tsx</code>, <code>src/pages/api/</code>, <code>src/utils/matches/</code>, <code>testSetup/</code></td></tr>
               <tr><td>Key paths absent</td><td><code>node_modules/</code>, <code>.env</code>, <code>dist/</code>, <code>.next/</code></td></tr>
@@ -296,7 +295,7 @@ npx tsx scripts/generate-context.ts inbox/repomix-YYYY-MM-DD.xml</code></pre>
       <section id="related-repos">
         <h2><span class="section-num">§ 07 — Ecosystem</span>Related repos</h2>
         <ul>
-          <li><strong>Matcher master</strong> — source app (repomix export origin)</li>
+          <li><strong>Matcher master</strong> — source app (repomix export origin). Local clone path is set in <code>config/master-export.json</code> (default <code>C:\MFRM\repos\matcher-master\Mattress-Matcher</code>, outside OneDrive). Override with env <code>MASTER_REPO_PATH</code>.</li>
           <li><strong>cursor-playwright</strong> — Playwright test suite (optional consumer of <code>context/</code>)</li>
         </ul>
       </section>
@@ -308,7 +307,7 @@ npx tsx scripts/generate-context.ts inbox/repomix-YYYY-MM-DD.xml</code></pre>
 
       <footer>
         <span><strong>Source</strong> <a href="../../README.md">README.md</a> — edit Markdown, regenerate HTML</span>
-        <span><strong>Last converted</strong> 2026-07-01</span>
+        <span><strong>Last converted</strong> 2026-07-24</span>
       </footer>
 
     </article>
