@@ -1,0 +1,1129 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>DreamHub Mattress Matcher — Matches API Overview</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<style>
+  :root {
+    --bg-primary: #f4f3ee;
+    --bg-secondary: #eeede6;
+    --bg-tertiary: #e8e6dc;
+    --bg-inverse: #191817;
+    --text-primary: #191817;
+    --text-secondary: #5a554e;
+    --text-muted: #8a847a;
+    --accent: #c96442;
+    --accent-hover: #b55738;
+    --accent-soft: #e89268;
+    --border: #d8d3c8;
+    --border-strong: #c4bfb2;
+    --success: #6b7a3d;
+    --warning: #c98a42;
+    --danger: #a53e2a;
+    --sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    --mono: 'JetBrains Mono', 'SF Mono', Menlo, monospace;
+  }
+
+  * { box-sizing: border-box; }
+
+  html { background: var(--bg-primary); }
+
+  body {
+    margin: 0;
+    font-family: var(--sans);
+    font-weight: 400;
+    font-size: 17px;
+    line-height: 1.6;
+    color: var(--text-primary);
+    background: var(--bg-primary);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  .page {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 80px 48px 120px;
+  }
+
+  /* --- Masthead --- */
+  .masthead {
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 48px;
+    margin-bottom: 64px;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+
+  .eyebrow {
+    font-family: var(--sans);
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0;
+  }
+
+  h1.title {
+    font-family: var(--sans);
+    font-weight: 600;
+    font-size: 50px;
+    line-height: 1.05;
+    letter-spacing: -0.015em;
+    margin: 0;
+    text-wrap: balance;
+    color: var(--text-primary);
+  }
+
+  .deck {
+    font-family: var(--sans);
+    font-style: italic;
+    font-weight: 400;
+    font-size: 21px;
+    line-height: 1.45;
+    color: var(--text-secondary);
+    max-width: 680px;
+    margin: 0;
+    text-wrap: pretty;
+  }
+
+  .byline {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 24px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+    margin-top: 8px;
+  }
+
+  .byline-item {
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+
+  .byline-item strong {
+    display: block;
+    font-family: var(--sans);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+  }
+
+  /* --- Layout grid --- */
+  .layout {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    gap: 64px;
+    align-items: start;
+  }
+
+  /* --- TOC sidebar --- */
+  .toc {
+    position: sticky;
+    top: 40px;
+    font-size: 14px;
+  }
+
+  .toc-label {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin: 0 0 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .toc ol {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    counter-reset: toc;
+  }
+
+  .toc li {
+    counter-increment: toc;
+    margin-bottom: 10px;
+    line-height: 1.4;
+  }
+
+  .toc a {
+    color: var(--text-secondary);
+    text-decoration: none;
+    display: block;
+    padding-left: 28px;
+    position: relative;
+    transition: color 120ms ease;
+  }
+
+  .toc a::before {
+    content: counter(toc, decimal-leading-zero);
+    position: absolute;
+    left: 0;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-muted);
+    top: 3px;
+  }
+
+  .toc a:hover {
+    color: var(--accent);
+  }
+
+  /* --- Article --- */
+  article {
+    min-width: 0;
+  }
+
+  article > section + section {
+    margin-top: 96px;
+  }
+
+  h2 {
+    font-family: var(--sans);
+    font-weight: 600;
+    font-size: 32px;
+    line-height: 1.1;
+    letter-spacing: -0.015em;
+    margin: 0 0 8px;
+    text-wrap: balance;
+    color: var(--text-primary);
+  }
+
+  h2 .section-num {
+    display: block;
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 400;
+    letter-spacing: 0.1em;
+    color: var(--accent);
+    margin-bottom: 16px;
+    text-transform: uppercase;
+  }
+
+  h3 {
+    font-family: var(--sans);
+    font-weight: 500;
+    font-size: 26px;
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+    margin: 56px 0 16px;
+    color: var(--text-primary);
+  }
+
+  h4 {
+    font-family: var(--sans);
+    font-weight: 600;
+    font-size: 13px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    margin: 32px 0 12px;
+  }
+
+  p {
+    margin: 0 0 20px;
+    max-width: 70ch;
+    text-wrap: pretty;
+  }
+
+  a { color: var(--accent); text-decoration: none; border-bottom: 1px solid transparent; transition: border-color 120ms ease; }
+  a:hover { border-bottom-color: var(--accent); }
+
+  strong { font-weight: 600; color: var(--text-primary); }
+  em { font-style: italic; }
+
+  ul, ol {
+    max-width: 70ch;
+    padding-left: 24px;
+    margin: 0 0 24px;
+  }
+
+  li { margin-bottom: 8px; }
+  li::marker { color: var(--accent); }
+
+  /* --- Inline code --- */
+  code {
+    font-family: var(--mono);
+    font-size: 0.88em;
+    background: var(--bg-secondary);
+    padding: 2px 6px;
+    border-radius: 4px;
+    color: var(--text-primary);
+    border: 1px solid var(--border);
+  }
+
+  /* --- Tables --- */
+  .table-wrap {
+    margin: 24px 0 32px;
+    overflow-x: auto;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--bg-primary);
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+  }
+
+  th {
+    font-family: var(--sans);
+    font-weight: 600;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    text-align: left;
+    padding: 14px 18px;
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+
+  td {
+    padding: 14px 18px;
+    vertical-align: top;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-primary);
+    line-height: 1.5;
+  }
+
+  tr:last-child td { border-bottom: none; }
+  tr:nth-child(even) td { background: var(--bg-secondary); }
+
+  td code {
+    font-size: 0.85em;
+    white-space: nowrap;
+  }
+
+  /* --- Method pills --- */
+  .method {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 500;
+    padding: 2px 8px;
+    border-radius: 3px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    border: 1px solid var(--border);
+    background: var(--bg-primary);
+    color: var(--text-secondary);
+  }
+  .method.get { color: var(--success); border-color: #c5cfa8; background: #eef0e0; }
+  .method.post { color: var(--accent); border-color: #e8c0ad; background: #f7e8df; }
+  .method.trpc { color: var(--warning); border-color: #e8cfa5; background: #f5eada; }
+
+  /* --- Blockquote / callout --- */
+  blockquote {
+    margin: 32px 0;
+    padding: 20px 28px;
+    border-left: 3px solid var(--accent);
+    background: var(--bg-secondary);
+    font-family: var(--sans);
+    font-style: italic;
+    font-size: 18px;
+    line-height: 1.55;
+    color: var(--text-secondary);
+    border-radius: 0 6px 6px 0;
+  }
+
+  blockquote p { margin: 0; max-width: none; }
+  blockquote a { color: var(--accent); font-style: normal; }
+
+  /* --- Mermaid containers --- */
+  .diagram {
+    margin: 32px 0 40px;
+    padding: 32px;
+    background: var(--bg-secondary);
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    overflow-x: auto;
+  }
+
+  .diagram .mermaid {
+    background: transparent;
+    text-align: center;
+  }
+
+  .diagram-caption {
+    font-family: var(--sans);
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-top: 16px;
+    text-align: center;
+  }
+
+  /* --- Phase cards --- */
+  .phase {
+    padding: 40px 0;
+    border-top: 1px solid var(--border);
+  }
+
+  .phase:first-of-type { border-top: none; padding-top: 8px; }
+
+  .phase-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 12px;
+  }
+
+  .phase h3 {
+    margin-top: 0;
+  }
+
+  .lede {
+    font-family: var(--sans);
+    font-size: 19px;
+    line-height: 1.5;
+    color: var(--text-secondary);
+    font-style: italic;
+    max-width: 65ch;
+    margin: 0 0 24px;
+  }
+
+  /* --- Timing grid --- */
+  .timing-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 20px;
+    margin: 24px 0 32px;
+  }
+
+  .timing-card {
+    background: var(--bg-secondary);
+    padding: 24px;
+    border-radius: 8px;
+    transition: border-color 120ms ease;
+    border: 1px solid transparent;
+  }
+
+  .timing-card:hover { border-color: var(--border-strong); }
+
+  .timing-card h5 {
+    font-family: var(--sans);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 12px;
+  }
+
+  .timing-card ul {
+    margin: 0;
+    padding-left: 18px;
+    font-size: 14px;
+  }
+
+  .timing-card code {
+    font-size: 0.9em;
+    background: var(--bg-primary);
+  }
+
+  /* --- Pull quote / aside --- */
+  .aside {
+    background: var(--bg-inverse);
+    color: var(--bg-primary);
+    padding: 40px 48px;
+    margin: 48px -32px;
+    border-radius: 8px;
+  }
+
+  .aside h3 {
+    color: var(--bg-primary);
+    margin-top: 0;
+    font-size: 22px;
+  }
+
+  .aside p { color: rgba(244, 243, 238, 0.75); }
+  .aside strong { color: var(--bg-primary); }
+  .aside code {
+    background: rgba(244, 243, 238, 0.1);
+    color: var(--bg-primary);
+    border-color: rgba(244, 243, 238, 0.15);
+  }
+
+  /* --- Footer --- */
+  footer {
+    margin-top: 120px;
+    padding-top: 32px;
+    border-top: 1px solid var(--border);
+    font-size: 13px;
+    color: var(--text-muted);
+    text-align: center;
+  }
+
+  /* --- Route group cards (replaces wide reference table) --- */
+  .route-groups {
+    display: grid;
+    gap: 40px;
+    margin: 32px 0 16px;
+  }
+
+  .route-group-label {
+    font-family: var(--sans);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 16px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+  }
+
+  .route-group-label .count {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-muted);
+    font-weight: 400;
+    letter-spacing: 0;
+  }
+
+  .routes {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 16px;
+  }
+
+  .route {
+    background: var(--bg-secondary);
+    border-radius: 8px;
+    padding: 18px 20px;
+    border: 1px solid transparent;
+    transition: border-color 140ms ease;
+  }
+
+  .route:hover { border-color: var(--border-strong); }
+
+  .route-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .route-path {
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-primary);
+    background: transparent;
+    border: none;
+    padding: 0;
+    word-break: break-all;
+  }
+
+  .route-meta {
+    display: grid;
+    gap: 10px;
+    font-size: 13px;
+    line-height: 1.45;
+  }
+
+  .route-meta-row {
+    display: grid;
+    grid-template-columns: 78px 1fr;
+    gap: 12px;
+    align-items: baseline;
+  }
+
+  .route-meta-label {
+    font-family: var(--sans);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  .route-meta-value { color: var(--text-primary); }
+  .route-meta-value code { font-size: 0.9em; background: var(--bg-primary); }
+
+  /* --- Diagram enlarge button --- */
+  .diagram { position: relative; }
+
+  .diagram-enlarge {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    background: var(--bg-primary);
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+    font-family: var(--sans);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 140ms ease;
+    z-index: 2;
+  }
+
+  .diagram-enlarge:hover {
+    background: var(--accent);
+    color: var(--bg-primary);
+    border-color: var(--accent);
+  }
+
+  .diagram-enlarge svg {
+    width: 12px;
+    height: 12px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 2;
+  }
+
+  /* --- Lightbox modal --- */
+  .lightbox {
+    position: fixed;
+    inset: 0;
+    background: rgba(25, 24, 23, 0.88);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 48px;
+    z-index: 1000;
+    opacity: 0;
+    transition: opacity 180ms ease;
+  }
+
+  .lightbox.open {
+    display: flex;
+    opacity: 1;
+  }
+
+  .lightbox-content {
+    background: var(--bg-primary);
+    border-radius: 8px;
+    width: min(96vw, 2400px);
+    max-height: 94vh;
+    padding: 56px 48px 48px;
+    overflow: auto;
+    position: relative;
+    box-shadow: 0 8px 24px rgba(25, 24, 23, 0.3);
+  }
+
+  .lightbox-content .mermaid {
+    text-align: center;
+    min-height: 200px;
+  }
+
+  .lightbox-body {
+    width: 100%;
+    overflow: auto;
+    max-height: 86vh;
+  }
+
+  .lightbox-body svg {
+    display: block;
+    margin: 0 auto;
+  }
+
+  .lightbox-close {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    background: transparent;
+    border: 1px solid var(--border);
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-secondary);
+    font-size: 20px;
+    line-height: 1;
+    transition: all 140ms ease;
+    font-family: var(--sans);
+  }
+
+  .lightbox-close:hover {
+    background: var(--accent);
+    color: var(--bg-primary);
+    border-color: var(--accent);
+  }
+
+  body.lightbox-open { overflow: hidden; }
+
+  /* --- Mobile --- */
+  @media (max-width: 900px) {
+    .page { padding: 48px 24px 80px; }
+    .layout { grid-template-columns: 1fr; gap: 48px; }
+    .toc { position: static; }
+    h1.title { font-size: 38px; }
+    h2 { font-size: 30px; }
+    h3 { font-size: 22px; }
+    .deck { font-size: 18px; }
+    body { font-size: 18px; }
+    .aside { padding: 28px; margin: 32px 0; }
+    .routes { grid-template-columns: 1fr; }
+    .lightbox { padding: 16px; }
+    .lightbox-content { padding: 48px 20px 24px; }
+    .diagram-enlarge { top: 10px; right: 10px; padding: 5px 10px; font-size: 10px; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="masthead">
+    <p class="eyebrow">DreamHub · QA Reference</p>
+    <h1 class="title">Mattress Matcher — Matches API Overview</h1>
+    <p class="deck">Inner workings of <code>POST /api/matches</code> — payload gates, budget dual-call, response shaping, and troubleshooting signals for network debugging.</p>
+    <div class="byline">
+      <div class="byline-item"><strong>Audience</strong>QA, Engineering</div>
+      <div class="byline-item"><strong>Scope</strong>New matcher V2 BFF only</div>
+      <div class="byline-item"><strong>Validated</strong>Code · <strong>2026-07-23</strong></div>
+      <div class="byline-item"><strong>Maintainer</strong>Matcher Knowledge Hub</div>
+    </div>
+  </header>
+
+  <div class="layout">
+    <nav class="toc">
+      <p class="toc-label">Contents</p>
+      <ol>
+        <li><a href="#what">What this API is</a></li>
+        <li><a href="#when">When it runs</a></li>
+        <li><a href="#lifecycle">End-to-end lifecycle</a></li>
+        <li><a href="#request">Request contract</a></li>
+        <li><a href="#bff">BFF inner workings</a></li>
+        <li><a href="#response">Response → UI</a></li>
+        <li><a href="#siblings">Sibling APIs</a></li>
+        <li><a href="#troubleshoot">Troubleshooting</a></li>
+        <li><a href="#related">Related docs</a></li>
+      </ol>
+    </nav>
+
+    <article>
+
+      <blockquote>
+        <p>For <em>when</em> this API fires in the journey, see <a href="matcher-api-triggers.html">API triggers</a> (Phase C). This doc focuses on <strong>how the Matches BFF works inside</strong> and what to inspect in DevTools.</p>
+      </blockquote>
+      <p>Production URL: <code>https://dreamhub.mattressfirm.com/mattressmatcher/api/matches</code></p>
+
+      <section id="what">
+        <h2><span class="section-num">§ 01 — Purpose</span>What this API is</h2>
+        <p class="lede">The Matches API turns quiz answers into ranked mattress recommendations plus foundation mappings for the Matches tab. The browser never calls Recommender V2 directly.</p>
+
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Concern</th><th>Owner</th></tr></thead>
+            <tbody>
+              <tr><td>Quiz → request body</td><td>Client (<code>formatNewRecommendationsPayload</code>, optional try-in-store stamp)</td></tr>
+              <tr><td>Validation, upstream call(s), foundation mappings</td><td>BFF (<code>/api/matches</code>)</td></tr>
+              <tr><td>Ranked products + log id</td><td>Recommender V2</td></tr>
+              <tr><td>Three match cards</td><td>Client (<code>mapNewQuizResponseToMatches</code>)</td></tr>
+              <tr><td>Record top items seen</td><td>Sibling <code>POST /api/updateTopItems</code></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>Legacy contrast: V1 uses <code>POST /api/recommendedProducts</code>. New DH Shop work targets <code>/api/matches</code> only.</p>
+      </section>
+
+      <section id="when">
+        <h2><span class="section-num">§ 02 — Init</span>When it runs (and when it does not)</h2>
+        <p>On Matches tab mount, <code>resolveMatchesInitAction</code> runs <strong>once</strong> (tab switches do not re-run):</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Init action</th><th>When</th><th>Network</th></tr></thead>
+            <tbody>
+              <tr><td><code>skip</code></td><td><code>skipInitialFetch</code> set</td><td>None</td></tr>
+              <tr><td><code>profile-preload</code></td><td>First View Matcher + prior profile log; quiz not just submitted</td><td>None</td></tr>
+              <tr><td><code>restore-cache</code></td><td>Session has <code>recommenderLogId</code>; quiz not just submitted</td><td>None</td></tr>
+              <tr><td><code>fetch</code></td><td>Fresh quiz submit, or no cache/preload</td><td><code>POST /api/matches</code></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="aside">
+          <h3>QA pitfall</h3>
+          <p>Returning to the Matches tab from PLP with an existing session log often shows <strong>no</strong> <code>/api/matches</code> call — that is expected cache restore, not a broken network. Quiz re-submit always forces <code>fetch</code>.</p>
+        </div>
+      </section>
+
+      <section id="lifecycle">
+        <h2><span class="section-num">§ 03 — Lifecycle</span>End-to-end lifecycle</h2>
+        <h4>Step-by-step flow</h4>
+        <ol>
+          <li>Sleep Expert completes quiz and clicks <strong>View Matches!</strong> (or refresh / re-edit fetch path).</li>
+          <li>Init resolves to <code>fetch</code> (or cache/preload skips the rest).</li>
+          <li>Client builds <code>MatchesRecommendationsPayload</code> from quiz answers + store/customer identifiers. Accessory size mapping must already be loaded.</li>
+          <li>If <code>enableMatchesBudgetToggleNewDesign</code> is on, client may stamp <code>isAvailableTryInStore</code>.</li>
+          <li>Client POSTs to <code>/mattressmatcher/api/matches</code> with query flags.</li>
+          <li>BFF rejects bad method / old-quiz reason / missing mattress size.</li>
+          <li>BFF calls Recommender V2 once (non-budget) or twice sequentially (budget), then builds result with foundation mappings.</li>
+          <li>Client maps products → three pairings; caches response ~1 hour in memory.</li>
+          <li>Fire-and-forget <code>POST /api/updateTopItems</code>.</li>
+        </ol>
+
+        <div class="diagram">
+          <div class="mermaid">
+sequenceDiagram
+  participant SE as SleepExpert
+  participant Client as MatchesClient
+  participant BFF as POST_api_matches
+  participant Rec as RecommenderV2
+
+  SE->>Client: View Matches fetch path
+  Client->>Client: formatNewRecommendationsPayload
+  Client->>BFF: POST matches plus query flags
+  BFF->>BFF: Validate reason and mattressSize
+  alt Budget dual-call
+    BFF->>Rec: Default recommendations
+    BFF->>Rec: Budget recommendations
+    BFF->>BFF: mergeDefaultAndBudgetMatches
+  else Single call
+    BFF->>Rec: Recommendations
+  end
+  BFF-->>Client: products logId mappings
+  Client->>Client: mapNewQuizResponseToMatches
+          </div>
+        </div>
+      </section>
+
+      <section id="request">
+        <h2><span class="section-num">§ 04 — Contract</span>Request contract</h2>
+
+        <h3>Hard BFF gates</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Check</th><th>Failure</th><th>What QA sees</th></tr></thead>
+            <tbody>
+              <tr><td>Method ≠ POST</td><td><code>400</code> Invalid HTTP method</td><td>Wrong verb</td></tr>
+              <tr><td><code>customerResponses.reason</code> lacks hyphenated tokens</td><td><code>400</code> Bad Request + old-quiz warn</td><td>Legacy / malformed why-shop</td></tr>
+              <tr><td><code>customerResponses.mattressSize</code> missing</td><td><code>422</code> with <code>missingFields: ['mattressSize']</code></td><td>Size missing or map failed</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>Quiz → payload mappings</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Quiz input</th><th>Payload field(s)</th></tr></thead>
+            <tbody>
+              <tr><td>Size</td><td><code>mattressSize</code> / <code>customerResponses.mattressSize</code></td></tr>
+              <tr><td>Comfort</td><td>Top-level comfort string + <code>customerResponses.comfort</code> labels</td></tr>
+              <tr><td>Disruptors</td><td>Integer disruptor fields (top-level + customerResponses)</td></tr>
+              <tr><td>Why shop</td><td><code>customerResponses.reason</code> (hyphenated, <code>;</code>-joined)</td></tr>
+              <tr><td>Budget</td><td><code>priceRange</code>; optional <code>budgetValue</code></td></tr>
+              <tr><td>Sleep position</td><td><code>customerResponses.sleepPosition</code></td></tr>
+              <tr><td>Accessory size map</td><td>Top-level <code>sizes</code> and <code>customerResponses.sizes</code></td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>Query parameters</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Param</th><th>Role</th></tr></thead>
+            <tbody>
+              <tr><td><code>refresh</code></td><td><code>true</code> on manual refresh → remapping</td></tr>
+              <tr><td><code>apiTimeout</code></td><td>Upstream timeout</td></tr>
+              <tr><td><code>enableErrorLogging</code></td><td><code>true</code> → server log on catch</td></tr>
+              <tr><td><code>enableMatchesBudgetToggleNewDesign</code></td><td><code>false</code> forces single-call path</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>Optional body fields</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Field</th><th>When</th><th>Effect</th></tr></thead>
+            <tbody>
+              <tr><td><code>action</code> + <code>inboundRecommenderLogId</code></td><td>Prior log (re-edit)</td><td>Edit session upstream</td></tr>
+              <tr><td><code>isAvailableTryInStore</code></td><td>New-design flag on</td><td>Try-in-store mode to recommender</td></tr>
+              <tr><td><code>budgetValue</code></td><td>Budget band selected</td><td>Can trigger dual-call</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="bff">
+        <h2><span class="section-num">§ 05 — BFF</span>BFF inner workings</h2>
+        <blockquote>
+          <p>Helper bodies in <code>utils/api/matches.ts</code> are not fully present in the current context dump. Behavior below is from the route handler and curated overlays.</p>
+        </blockquote>
+
+        <h3>Non-budget / single-call</h3>
+        <p>Used when there is no budget value <strong>or</strong> <code>enableMatchesBudgetToggleNewDesign === 'false'</code>:</p>
+        <ol>
+          <li>Strip sizes from upstream body (sizes kept for result build).</li>
+          <li>One Recommender V2 call.</li>
+          <li><code>buildMatchesResult</code> → if null, echo upstream status/message.</li>
+          <li>Success: <code>{ recommendedProducts, recommenderLogId, mappings }</code>.</li>
+        </ol>
+
+        <h3>Budget dual-call</h3>
+        <p>Used when budget value exists and the new-design flag is not forced off:</p>
+        <ol>
+          <li><strong>Default call</strong> — budget fields removed. Failure stops the flow.</li>
+          <li><strong>Budget call</strong> — sets inbound log from default; forces <code>FITS_YOUR_BUDGET</code>, edit action, <code>isBudgetSelected: true</code>.</li>
+          <li>Budget failure → graceful degrade to default-only products.</li>
+          <li>Both succeed → merge: first 6 default products + all budget products.</li>
+        </ol>
+        <p><strong>QA pitfall:</strong> View Budget Matches in the UI usually does <em>not</em> fire a second <code>/api/matches</code> — it re-indexes the fetched list and calls <code>updateTopItems</code>. The dual-call happens inside the original matches request when budget was in the quiz payload.</p>
+      </section>
+
+      <section id="response">
+        <h2><span class="section-num">§ 06 — Response</span>Response → Matches UI</h2>
+
+        <h3>BFF → client shape</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Field</th><th>Meaning for QA</th></tr></thead>
+            <tbody>
+              <tr><td><code>recommendedProducts</code></td><td>Ranked list (length drives whether cards render)</td></tr>
+              <tr><td><code>recommenderLogId</code></td><td>Session identity; needed for top-items and edit/cache</td></tr>
+              <tr><td><code>mappings</code></td><td>Variant → foundations (pairings use adjustable bases)</td></tr>
+              <tr><td><code>budgetIndexStart</code></td><td>Optional; where budget slice starts for new-design bands</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>Three cards / index bands</h3>
+        <p><code>mapNewQuizResponseToMatches</code> always builds three pairings. Fewer than three products → empty Matches UI despite a 200.</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Flag</th><th>Mode</th><th>Indices (approx.)</th></tr></thead>
+            <tbody>
+              <tr><td>off</td><td>Best</td><td><code>[0, 1, 2]</code></td></tr>
+              <tr><td>off</td><td>Budget view</td><td><code>[3, 1, 4]</code></td></tr>
+              <tr><td>on</td><td>Best + try-in-store</td><td><code>[0, 1, 2]</code></td></tr>
+              <tr><td>on</td><td>Best + online</td><td><code>[3, 4, 5]</code></td></tr>
+              <tr><td>on</td><td>Budget + try-in-store</td><td><code>budgetIndexStart…+2</code> or <code>[6,7,8]</code></td></tr>
+              <tr><td>on</td><td>Budget + online</td><td><code>budgetIndexStart+3…+5</code> or <code>[9,10,11]</code></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="siblings">
+        <h2><span class="section-num">§ 07 — Related calls</span>Sibling APIs</h2>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>API</th><th>Relationship</th></tr></thead>
+            <tbody>
+              <tr><td><code>POST /api/updateTopItems</code></td><td>After matches / budget re-slice — records top item IDs with log id</td></tr>
+              <tr><td><code>GET /api/getTryInStoreData</code></td><td>Enriches adjustable bases catalog — separate from matches body flag</td></tr>
+              <tr><td><code>POST /api/recommendedProducts</code></td><td>Legacy V1 — not for new-matcher troubleshooting</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="troubleshoot">
+        <h2><span class="section-num">§ 08 — Playbook</span>Troubleshooting</h2>
+
+        <h3>Status and failure modes</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Signal</th><th>Likely cause</th><th>What to check</th></tr></thead>
+            <tbody>
+              <tr><td>No <code>/api/matches</code></td><td>Cache / preload / skip</td><td>Session log; quiz re-submit?</td></tr>
+              <tr><td><code>400</code> Bad Request</td><td>Reason hyphen gate</td><td><code>customerResponses.reason</code></td></tr>
+              <tr><td><code>422</code></td><td>Missing mattress size</td><td>Quiz size; accessory map</td></tr>
+              <tr><td>Upstream status + message</td><td>Recommender / build failed</td><td>Response body; timeout; storecode</td></tr>
+              <tr><td><code>Unable to return Matches</code></td><td>Caught exception</td><td><code>errorMessage</code> / <code>errorDetail</code></td></tr>
+              <tr><td><code>200</code> but empty UI</td><td>&lt; 3 products</td><td><code>recommendedProducts.length</code></td></tr>
+              <tr><td>Budget UI wrong, one call</td><td>Expected client re-index</td><td>Indices / <code>updateTopItems</code></td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>Signal cheat sheet</h3>
+        <div class="timing-grid">
+          <div class="timing-card">
+            <h5>Identity</h5>
+            <ul>
+              <li><code>recommenderLogId</code></li>
+              <li><code>inboundRecommenderLogId</code></li>
+              <li><code>action</code> (edit)</li>
+            </ul>
+          </div>
+          <div class="timing-card">
+            <h5>Flags &amp; query</h5>
+            <ul>
+              <li><code>refresh=true</code></li>
+              <li><code>enableMatchesBudgetToggleNewDesign</code></li>
+              <li><code>isAvailableTryInStore</code></li>
+            </ul>
+          </div>
+          <div class="timing-card">
+            <h5>Budget &amp; cards</h5>
+            <ul>
+              <li><code>budgetValue</code></li>
+              <li><code>budgetIndexStart</code></li>
+              <li><code>F…</code> fallback D365 IDs</li>
+            </ul>
+          </div>
+        </div>
+
+        <h4>Dependencies &amp; blockers</h4>
+        <ul>
+          <li>Valid <code>mattressSize</code> and hyphenated <code>reason</code> required before upstream.</li>
+          <li><code>accessorySizeMapping</code> should load before payload formatting.</li>
+          <li>Cards need at least three products in the response list.</li>
+        </ul>
+      </section>
+
+      <section id="related">
+        <h2><span class="section-num">§ 09 — Related</span>Related docs</h2>
+        <ul>
+          <li><a href="matcher-api-triggers.html">API triggers</a> — journey timing</li>
+          <li><a href="matcher-app-overview.html">App overview</a> — product-level quiz → Matches</li>
+          <li><a href="../matcher-matches-api-overview.md">Markdown source</a> — edit here, regenerate HTML</li>
+        </ul>
+      </section>
+
+      <footer>
+        Matcher Knowledge Hub · Matches API Overview · Last validated code sync 2026-07-23 · Converted 2026-07-24
+      </footer>
+
+    </article>
+  </div>
+</div>
+
+<script>
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'base',
+    themeVariables: {
+      fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif',
+      fontSize: '13px',
+      primaryColor: '#f4f3ee',
+      primaryTextColor: '#191817',
+      primaryBorderColor: '#c96442',
+      lineColor: '#5a554e',
+      secondaryColor: '#eeede6',
+      tertiaryColor: '#f4f3ee',
+      background: 'transparent',
+      mainBkg: '#f4f3ee',
+      secondBkg: '#eeede6',
+      tertiaryBkg: '#e8e6dc',
+      nodeBorder: '#c96442',
+      clusterBkg: 'transparent',
+      clusterBorder: '#d8d3c8',
+      titleColor: '#191817',
+      edgeLabelBackground: '#f4f3ee',
+      actorBkg: '#f4f3ee',
+      actorBorder: '#c96442',
+      actorTextColor: '#191817',
+      actorLineColor: '#5a554e',
+      signalColor: '#5a554e',
+      signalTextColor: '#191817',
+      labelBoxBkgColor: '#eeede6',
+      labelBoxBorderColor: '#c96442',
+      labelTextColor: '#191817',
+      noteBkgColor: '#f7e8df',
+      noteBorderColor: '#c96442',
+      noteTextColor: '#191817',
+      activationBkgColor: '#e89268',
+      activationBorderColor: '#c96442',
+      sequenceNumberColor: '#f4f3ee'
+    }
+  });
+
+  (function () {
+    const ENLARGE_SVG = '<svg viewBox="0 0 24 24"><path d="M4 4h6M4 4v6M4 4l7 7M20 20h-6M20 20v-6M20 20l-7-7"/></svg>';
+
+    function buildLightbox() {
+      const lb = document.createElement('div');
+      lb.className = 'lightbox';
+      lb.id = 'lightbox';
+      lb.innerHTML = '<div class="lightbox-content"><button class="lightbox-close" aria-label="Close">&times;</button><div class="lightbox-body"></div></div>';
+      document.body.appendChild(lb);
+      lb.addEventListener('click', (e) => { if (e.target === lb) closeLightbox(); });
+      lb.querySelector('.lightbox-close').addEventListener('click', closeLightbox);
+      return lb;
+    }
+
+    function openLightbox(diagramEl) {
+      const lb = document.getElementById('lightbox') || buildLightbox();
+      const body = lb.querySelector('.lightbox-body');
+      const svg = diagramEl.querySelector('.mermaid svg');
+      if (!svg) return;
+      const clone = svg.cloneNode(true);
+      clone.removeAttribute('width');
+      clone.removeAttribute('height');
+      clone.removeAttribute('style');
+      clone.setAttribute('width', '100%');
+      clone.setAttribute('height', '100%');
+      clone.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+      clone.style.display = 'block';
+      clone.style.width = '100%';
+      clone.style.height = 'auto';
+      clone.style.maxHeight = '82vh';
+      body.innerHTML = '';
+      body.appendChild(clone);
+      lb.classList.add('open');
+      document.body.classList.add('lightbox-open');
+    }
+
+    function closeLightbox() {
+      const lb = document.getElementById('lightbox');
+      if (!lb) return;
+      lb.classList.remove('open');
+      document.body.classList.remove('lightbox-open');
+    }
+
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeLightbox(); });
+
+    function addButtons() {
+      document.querySelectorAll('.diagram').forEach((d) => {
+        if (d.querySelector('.diagram-enlarge')) return;
+        const btn = document.createElement('button');
+        btn.className = 'diagram-enlarge';
+        btn.setAttribute('aria-label', 'Enlarge diagram');
+        btn.innerHTML = ENLARGE_SVG + '<span>Enlarge</span>';
+        btn.addEventListener('click', () => openLightbox(d));
+        d.appendChild(btn);
+      });
+    }
+
+    let tries = 0;
+    const interval = setInterval(() => {
+      tries++;
+      const rendered = document.querySelectorAll('.diagram .mermaid svg').length;
+      if (rendered > 0 || tries > 40) {
+        addButtons();
+        if (tries > 40) clearInterval(interval);
+      }
+      if (rendered >= document.querySelectorAll('.diagram').length) clearInterval(interval);
+    }, 150);
+  })();
+</script>
+</body>
+</html>

@@ -415,7 +415,7 @@ flowchart TB
             </ul>
           </li>
           <li><strong>Build API payload</strong> — On <code>fetch</code> path only: <code>formatNewRecommendationsPayload()</code> maps quiz answers to <code>MatchesRecommendationsPayload</code>. When <code>enableMatchesBudgetToggleNewDesign</code> is on, <code>applyMatchesTryInStorePayload</code> adds <code>isAvailableTryInStore</code> from the try-in-store toggle.</li>
-          <li><strong>Fetch matches</strong> — Client POST to <code>/mattressmatcher/api/matches</code>.</li>
+          <li><strong>Fetch matches</strong> — Client POST to <code>/mattressmatcher/api/matches</code>. See <a href="matcher-matches-api-overview.html">Matches API overview</a> for BFF internals and QA troubleshooting.</li>
           <li><strong>Server processing</strong> — <code>/api/matches</code> → external Matches API (V2) + foundation accessory mappings.</li>
           <li><strong>Map to UI</strong> — <code>mapNewQuizResponseToMatches()</code> → top 3 mattress + base pairings with why-it-works, financing, delivery.</li>
           <li><strong>Show matches</strong> — Header tabs switch to <strong>post-quiz mode</strong>: <code>matcher quiz</code> | <code>matches</code> | <code>mattresses</code> | <code>foundations</code> | <code>bedding</code>. Matches tab shows <strong>"your customer's Top Matches"</strong>, a <strong>Matcher Summary</strong> narrative, 3 pairings with <strong>Add Both To Cart</strong>, <strong>Pair &amp; save</strong> financing (via <code>useFinancingOffer</code> + config tiers), optional <strong>try-in-store</strong> toggle, <strong>View Budget Matches</strong> (when budget preference allows), and <strong>View All Mattress/Foundation Matches</strong> links.</li>

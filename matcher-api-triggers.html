@@ -733,7 +733,7 @@
     <article>
 
       <blockquote>
-        <p>For high-level product flows and UI behavior, see <a href="matcher-app-overview.html">Matcher app overview</a>. This document focuses strictly on what hits the wire — and what doesn't.</p>
+        <p>For high-level product flows and UI behavior, see <a href="matcher-app-overview.html">Matcher app overview</a>. For Matches BFF internals (payload gates, budget dual-call, errors), see <a href="matcher-matches-api-overview.html">Matches API overview</a>. This document focuses strictly on what hits the wire — and what doesn't.</p>
       </blockquote>
 
       <!-- ===== Section 1: Structure ===== -->
@@ -1264,7 +1264,7 @@ sequenceDiagram
         <div class="phase">
           <p class="phase-label">Phase C · critical path</p>
           <h3>Matches fetch — top mattress + foundation pairings</h3>
-          <p class="lede">After quiz completion, the app requests ranked recommendations from Recommender V2 and maps the top three mattress + foundation pairings for the Matches tab.</p>
+          <p class="lede">After quiz completion, the app requests ranked recommendations from Recommender V2 and maps the top three mattress + foundation pairings for the Matches tab. <a href="matcher-matches-api-overview.html">Deep dive: Matches API overview</a>.</p>
 
           <ol>
             <li><code>useMatchesRecommendations</code> mounts with the Matches tab.</li>
@@ -1622,6 +1622,7 @@ sequenceDiagram
         <h4>Related docs</h4>
         <ul>
           <li><a href="matcher-app-overview.html">Matcher app overview</a> — product flows, UI copy, quiz journeys</li>
+          <li><a href="matcher-matches-api-overview.html">Matches API overview</a> — <code>/api/matches</code> BFF internals for QA</li>
           <li><code>context/03-matcher-logic-and-api.md</code> — BFF route source code</li>
           <li><code>context/05-state-and-context.md</code> — React contexts and hook implementations</li>
           <li><code>context/07-legacy-low-priority.md</code> — legacy V1 behavior only</li>
