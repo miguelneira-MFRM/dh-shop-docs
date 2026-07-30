@@ -515,6 +515,7 @@
     padding: 18px 20px;
     border: 1px solid transparent;
     transition: border-color 140ms ease;
+    min-width: 0;
   }
 
   .route:hover { border-color: var(--border-strong); }
@@ -544,12 +545,12 @@
     display: grid;
     gap: 10px;
     font-size: 13px;
-    line-height: 1.45;
+    line-height: 1.85;
   }
 
   .route-meta-row {
     display: grid;
-    grid-template-columns: 78px 1fr;
+    grid-template-columns: 78px minmax(0, 1fr);
     gap: 12px;
     align-items: baseline;
   }
@@ -563,8 +564,20 @@
     color: var(--text-muted);
   }
 
-  .route-meta-value { color: var(--text-primary); }
-  .route-meta-value code { font-size: 0.9em; background: var(--bg-primary); }
+  .route-meta-value {
+    color: var(--text-primary);
+    min-width: 0;
+    overflow-wrap: anywhere;
+    line-height: 1.85;
+  }
+  .route-meta-value code {
+    font-size: 0.9em;
+    background: var(--bg-primary);
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    line-height: 1.85;
+  }
 
   /* --- Diagram enlarge button --- */
   .diagram { position: relative; }
@@ -707,7 +720,7 @@
     <div class="byline">
       <div class="byline-item"><strong>Audience</strong>QA, Engineering</div>
       <div class="byline-item"><strong>Scope</strong>New matcher V2 BFF only</div>
-      <div class="byline-item"><strong>Validated</strong>Code · <strong>2026-07-23</strong></div>
+      <div class="byline-item"><strong>Validated</strong>Live prod <strong>2026-07-24</strong> · code · <strong>2026-07-23</strong></div>
       <div class="byline-item"><strong>Maintainer</strong>Matcher Knowledge Hub</div>
     </div>
   </header>
@@ -894,7 +907,7 @@ sequenceDiagram
           <li>Budget failure → graceful degrade to default-only products.</li>
           <li>Both succeed → merge: first 6 default products + all budget products.</li>
         </ol>
-        <p><strong>QA pitfall:</strong> View Budget Matches in the UI usually does <em>not</em> fire a second <code>/api/matches</code> — it re-indexes the fetched list and calls <code>updateTopItems</code>. The dual-call happens inside the original matches request when budget was in the quiz payload.</p>
+        <p><strong>QA pitfall:</strong> <strong>Best Matches / Fits Your Budget</strong> in the UI usually does <em>not</em> fire a second <code>/api/matches</code> — it re-indexes the fetched list and calls <code>updateTopItems</code>. The dual-call happens inside the original matches request when budget was in the quiz payload.</p>
       </section>
 
       <section id="response">
@@ -958,10 +971,28 @@ sequenceDiagram
               <tr><td>Upstream status + message</td><td>Recommender / build failed</td><td>Response body; timeout; storecode</td></tr>
               <tr><td><code>Unable to return Matches</code></td><td>Caught exception</td><td><code>errorMessage</code> / <code>errorDetail</code></td></tr>
               <tr><td><code>200</code> but empty UI</td><td>&lt; 3 products</td><td><code>recommendedProducts.length</code></td></tr>
-              <tr><td>Budget UI wrong, one call</td><td>Expected client re-index</td><td>Indices / <code>updateTopItems</code></td></tr>
+              <tr><td>Budget UI wrong, one call</td><td>Expected client re-index</td><td>Indices / <code>budgetIndexStart</code>; live UI labels are <strong>Best Matches</strong> / <strong>Fits Your Budget</strong> (flag on)</td></tr>
             </tbody>
           </table>
         </div>
+
+        <h3>Live validation notes (2026-07-24)</h3>
+        <p>Prod store <strong>132002</strong> · flag <strong><code>enableMatchesBudgetToggleNewDesign=true</code></strong>:</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Check</th><th>Result</th></tr></thead>
+            <tbody>
+              <tr><td>Fresh View Matches → <code>POST /api/matches</code> then <code>updateTopItems</code></td><td>Confirmed</td></tr>
+              <tr><td>Query includes design flag</td><td><code>enableMatchesBudgetToggleNewDesign=true</code></td></tr>
+              <tr><td>Body <code>isAvailableTryInStore</code></td><td><code>true</code> on fetch (checkbox default on); <code>false</code> on try-in-store toggle off via <code>updateTopItems</code> only</td></tr>
+              <tr><td>Return to Matches from PLP</td><td>No second <code>/api/matches</code> (cache restore)</td></tr>
+              <tr><td>Quiz re-edit</td><td><code>action: "edit - view/edit"</code> + <code>inboundRecommenderLogId</code></td></tr>
+              <tr><td>Budget radiogroup</td><td>Shown only when budget ≠ no preference; <strong>Fits Your Budget</strong> re-slices without second matches call</td></tr>
+              <tr><td><code>updateTopItems.topItems</code> (flag on)</td><td>Dual-band IDs separated by <code>~</code></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>Full journey table: <a href="matcher-api-triggers.html#validation">matcher-api-triggers.html — Live validation</a>.</p>
 
         <h3>Signal cheat sheet</h3>
         <div class="timing-grid">
@@ -1009,7 +1040,7 @@ sequenceDiagram
       </section>
 
       <footer>
-        Matcher Knowledge Hub · Matches API Overview · Last validated code sync 2026-07-23 · Converted 2026-07-24
+        Matcher Knowledge Hub · Matches API Overview · Live-validated prod 2026-07-24 · Code sync 2026-07-23 · Converted 2026-07-24
       </footer>
 
     </article>

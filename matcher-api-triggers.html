@@ -515,6 +515,7 @@
     padding: 18px 20px;
     border: 1px solid transparent;
     transition: border-color 140ms ease;
+    min-width: 0;
   }
 
   .route:hover { border-color: var(--border-strong); }
@@ -544,12 +545,12 @@
     display: grid;
     gap: 10px;
     font-size: 13px;
-    line-height: 1.45;
+    line-height: 1.85;
   }
 
   .route-meta-row {
     display: grid;
-    grid-template-columns: 78px 1fr;
+    grid-template-columns: 78px minmax(0, 1fr);
     gap: 12px;
     align-items: baseline;
   }
@@ -563,8 +564,20 @@
     color: var(--text-muted);
   }
 
-  .route-meta-value { color: var(--text-primary); }
-  .route-meta-value code { font-size: 0.9em; background: var(--bg-primary); }
+  .route-meta-value {
+    color: var(--text-primary);
+    min-width: 0;
+    overflow-wrap: anywhere;
+    line-height: 1.85;
+  }
+  .route-meta-value code {
+    font-size: 0.9em;
+    background: var(--bg-primary);
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    line-height: 1.85;
+  }
 
   /* --- Diagram enlarge button --- */
   .diagram { position: relative; }
@@ -708,7 +721,7 @@
     <div class="byline">
       <div class="byline-item"><strong>Audience</strong>Product, QA, Engineering</div>
       <div class="byline-item"><strong>Scope</strong>New matcher (<code>isNewMatcherEnabled</code>)</div>
-      <div class="byline-item"><strong>Validated</strong>Prod · 2026-06-04; code · <strong>2026-07-23</strong></div>
+      <div class="byline-item"><strong>Validated</strong>Prod · <strong>2026-07-24</strong> (code sync 2026-07-23)</div>
       <div class="byline-item"><strong>Maintainer</strong>Matcher Knowledge Hub</div>
     </div>
   </header>
@@ -901,7 +914,7 @@ flowchart TB
                 <div class="route-head"><code class="route-path">/api/updateTopItems</code><span class="method post">POST</span></div>
                 <div class="route-meta">
                   <div class="route-meta-row"><span class="route-meta-label">Upstream</span><span class="route-meta-value">Recommender top-items API</span></div>
-                  <div class="route-meta-row"><span class="route-meta-label">Trigger</span><span class="route-meta-value">After successful matches fetch; toggling View Budget Matches. Same flag gates optional <code>isAvailableTryInStore</code> on the top-items body</span></div>
+                  <div class="route-meta-row"><span class="route-meta-label">Trigger</span><span class="route-meta-value">After successful matches fetch; toggling <strong>Fits Your Budget</strong> / try-in-store (new-design Matches UI). Same flag gates optional <code>isAvailableTryInStore</code> on the top-items body</span></div>
                   <div class="route-meta-row"><span class="route-meta-label">Caller</span><span class="route-meta-value"><code>useMatchesRecommendations.fireUpdateTopItems</code></span></div>
                 </div>
               </div>
@@ -1180,7 +1193,7 @@ flowchart TB
         </div>
         <p>No new BFF route — same contracts, optional field only. Recommender / top-items can use the flag for ranking or logging.</p>
 
-        <blockquote><p><strong>Live validation:</strong> <code>getTryInStoreData</code>, fallback banners, and <code>isAvailableTryInStore</code> on matches/top-items not yet confirmed on prod (2026-06-04 capture predates these routes/fields).</p></blockquote>
+        <blockquote><p><strong>Live validation (2026-07-24):</strong> <code>GET /api/getTryInStoreData</code> confirmed after <code>recommendedAccessories</code> (store <strong>132002</strong>, adjustable-base product IDs). <code>enableMatchesBudgetToggleNewDesign=true</code> on prod; <code>isAvailableTryInStore</code> present on both <code>POST /api/matches</code> and <code>POST /api/updateTopItems</code>. Fallback banners still not forced in this session (all tryable SKUs).</p></blockquote>
       </section>
 
       <!-- ===== Section 5: Phases ===== -->
@@ -1314,8 +1327,8 @@ sequenceDiagram
               <thead><tr><th>Behavior</th><th>Detail</th></tr></thead>
               <tbody>
                 <tr><td><strong>Init action</strong></td><td><code>resolveMatchesInitAction</code> — <code>profile-preload</code> on first View Matcher entry with prior profile log; <code>restore-cache</code> when session has log; <code>fetch</code> on fresh quiz submit. Mount-only — tab switches do not re-run.</td></tr>
-                <tr><td><strong>View Budget Matches</strong></td><td>Client-side re-index of existing products + <code>updateTopItems</code> — <strong>no second <code>/api/matches</code> call</strong>. Indexing depends on <code>enableMatchesBudgetToggleNewDesign</code>: <strong>flag off</strong> → indices <code>[3, 1, 4]</code> vs <code>[0, 1, 2]</code>; <strong>flag on</strong> → separate best/budget slices (optionally from API <code>budgetIndexStart</code>), further split by try-in-store vs online</td></tr>
-                <tr><td><strong>Try-in-store toggle</strong></td><td>Client-side filter on match pairings; may show fallback banner via <code>shouldShowMatchesTryInStoreFallbackBanner</code>. When budget-toggle new design is on, toggle value is also sent as <code>isAvailableTryInStore</code> on matches/top-items requests</td></tr>
+                <tr><td><strong>Best Matches / Fits Your Budget</strong></td><td>Live UI (flag on): radiogroup <strong>"Best Matches"</strong> · <strong>"Fits Your Budget"</strong> (appears when quiz budget ≠ no preference). Client-side re-index of existing products — <strong>no second <code>/api/matches</code> call</strong>. Indexing depends on <code>enableMatchesBudgetToggleNewDesign</code>: <strong>flag off</strong> → indices <code>[3, 1, 4]</code> vs <code>[0, 1, 2]</code>; <strong>flag on</strong> → separate best/budget slices (optionally from API <code>budgetIndexStart</code>), further split by try-in-store vs online</td></tr>
+                <tr><td><strong>Try-in-store toggle</strong></td><td>Checkbox <strong>"Available to Try In-Store"</strong> (often checked by default). Client-side re-slice; live (2026-07-24) toggle off → <code>POST /api/updateTopItems</code> with <code>isAvailableTryInStore: false</code> and <strong>no</strong> second <code>/api/matches</code>. May show fallback banner via <code>shouldShowMatchesTryInStoreFallbackBanner</code> when <code>F…</code> foundations appear</td></tr>
                 <tr><td><strong>Manual refresh</strong></td><td><code>refresh()</code> re-calls <code>/api/matches</code> with <code>?refresh=true</code></td></tr>
                 <tr><td><strong>Re-edit session</strong></td><td>Payload includes <code>action: 'edit - view/edit'</code> and <code>inboundRecommenderLogId</code> when prior log exists</td></tr>
                 <tr><td><strong>Late accessories</strong></td><td>If foundation lists load after matches, client re-pairs without API</td></tr>
@@ -1493,16 +1506,16 @@ sequenceDiagram
 
         <div class="table-wrap">
           <table>
-            <thead><tr><th>#</th><th>Gap</th><th>How to validate</th><th>Live status (2026-06-04)</th></tr></thead>
+            <thead><tr><th>#</th><th>Gap</th><th>How to validate</th><th>Live status (2026-07-24)</th></tr></thead>
             <tbody>
-              <tr><td>1</td><td>View Matches click → <code>quizSubmitSuccess</code> wiring</td><td>Confirm fresh submit always triggers <code>/api/matches</code></td><td><strong>Confirmed</strong> — POST fires on click</td></tr>
+              <tr><td>1</td><td>View Matches click → <code>quizSubmitSuccess</code> wiring</td><td>Confirm fresh submit always triggers <code>/api/matches</code></td><td><strong>Confirmed</strong> — <code>POST /api/matches</code> fires on View Matches (and on quiz re-submit / edit)</td></tr>
               <tr><td>2</td><td>SSR server-side BFF pre-fetch</td><td>Inspect Network on cold load</td><td>Not tested (client-side capture only)</td></tr>
-              <tr><td>3</td><td>Search tab Unbxd caller</td><td>Walk search flow; confirm <code>queryType: search</code></td><td>Not tested — autosuggest fires on load</td></tr>
-              <tr><td>4</td><td><code>NewMatcherAtpSession</code> dedup helpers</td><td>Confirm ATP not duplicated on tab switches</td><td>Partial — single matches call; ATP not re-checked</td></tr>
-              <tr><td>5</td><td>CPOS vs D365 cart path</td><td>Verify active flag in target environment</td><td><strong>Not observed</strong> — no cart calls in session</td></tr>
-              <tr><td>6</td><td><code>getTryInStoreData</code> after accessories load</td><td>Cold load → confirm chained GET after <code>recommendedAccessories</code> with store ID</td><td><strong>Not tested</strong> — route added 2026-06-25; predates live capture</td></tr>
-              <tr><td>7</td><td>Try-in-store toggle + fallback banners</td><td>Complete quiz → toggle try-in-store on Matches; apply Try In-Store filter on PLP</td><td><strong>Not tested</strong> — UI helpers added 2026-06-25</td></tr>
-              <tr><td>8</td><td><code>isAvailableTryInStore</code> on matches / top-items</td><td>With <code>enableMatchesBudgetToggleNewDesign</code> on → View Matches and toggle try-in-store; confirm field on both POSTs</td><td><strong>Not tested</strong> — added 2026-07-23</td></tr>
+              <tr><td>3</td><td>Search tab Unbxd caller</td><td>Walk search flow; confirm <code>queryType: search</code></td><td>Not tested — autosuggest fires on Matcher load</td></tr>
+              <tr><td>4</td><td><code>NewMatcherAtpSession</code> dedup helpers</td><td>Confirm ATP not duplicated on tab switches</td><td>Partial — single <code>/api/matches</code> on tab return; ATP not re-checked</td></tr>
+              <tr><td>5</td><td>CPOS vs D365 cart path</td><td>Verify active flag in target environment</td><td><strong>Not observed</strong> — no <code>cartManagement</code> or <code>createCart</code> in session</td></tr>
+              <tr><td>6</td><td><code>getTryInStoreData</code> after accessories load</td><td>Cold load → confirm chained GET after <code>recommendedAccessories</code> with store ID</td><td><strong>Confirmed</strong> — <code>GET …/getTryInStoreData?productIds=…&amp;storeId=132002</code> (200), chained after accessories</td></tr>
+              <tr><td>7</td><td>Try-in-store toggle + fallback banners</td><td>Complete quiz → toggle try-in-store on Matches; apply Try In-Store filter on PLP</td><td><strong>Partial</strong> — Matches checkbox toggle confirmed (re-slice + <code>updateTopItems</code>); fallback banner not forced (all tryable)</td></tr>
+              <tr><td>8</td><td><code>isAvailableTryInStore</code> on matches / top-items</td><td>With <code>enableMatchesBudgetToggleNewDesign</code> on → View Matches and toggle try-in-store; confirm field on both POSTs</td><td><strong>Confirmed</strong> — query <code>enableMatchesBudgetToggleNewDesign=true</code>; body field <code>true</code> on fetch, <code>false</code> after toggle off</td></tr>
               <tr><td>9</td><td>My Store switch side effects</td><td>Switch to legacy store mid V2 edit; switch to new-matcher store with cart; confirm zipCodeSE + tab landing</td><td><strong>Not tested</strong> — hooks added 2026-07-23</td></tr>
               <tr><td>10</td><td>View Matcher session reset</td><td>Land with SSR <code>shouldResetViewMatcherSession</code>; confirm redirect strips recommender log id</td><td><strong>Not tested</strong> — hook added 2026-07-23</td></tr>
             </tbody>
@@ -1513,6 +1526,7 @@ sequenceDiagram
         <ol>
           <li>Cold load → note eager shell APIs (include chained <code>getTryInStoreData</code> if store context present).</li>
           <li>Complete quiz → <strong>View Matches</strong> → confirm <code>POST /api/matches</code> then <code>POST /api/updateTopItems</code> (with <code>isAvailableTryInStore</code> if budget-toggle new design flag is on).</li>
+          <li>With a non–no-preference budget → confirm <strong>Best Matches / Fits Your Budget</strong> radiogroup; <strong>Fits Your Budget</strong> re-slices without a second <code>/api/matches</code>.</li>
           <li>Switch to mattresses tab → confirm tRPC <code>getUnbxdResults</code>.</li>
           <li>Return to matches tab → confirm <strong>no</strong> repeat <code>/api/matches</code> (cache restore).</li>
           <li>Open PDP → confirm <code>productDetails</code>, <code>productPromos</code>, optional <code>atpCache</code>.</li>
@@ -1529,46 +1543,45 @@ sequenceDiagram
       <section id="validation">
         <h2><span class="section-num">§ 08 — Field report</span>Live validation</h2>
 
-        <p><strong>Environment.</strong> <a href="https://dreamhub.mattressfirm.com/">dreamhub.mattressfirm.com</a> prod · Store <strong>132002</strong> · Sleep Expert <strong>149651286</strong> · Playwright network capture · <strong>2026-06-04</strong>.</p>
+        <p><strong>Environment.</strong> <a href="https://dreamhub.mattressfirm.com/">dreamhub.mattressfirm.com</a> prod · Store <strong>132002</strong> · Sleep Expert <strong>149651286</strong> · Playwright network capture · <strong>2026-07-24</strong> (supersedes 2026-06-04 for try-in-store / budget-toggle fields; earlier UX notes remain valid).</p>
 
-        <p><strong>Flow exercised.</strong> DreamHub home → Matcher nav icon → complete Primary quiz (6/6) → <strong>View Matches!</strong> → <strong>mattresses</strong> tab → back to <strong>matches</strong> tab → <strong>PDP from match pairing card</strong> → <strong>mattresses</strong> tab → <strong>PDP from PLP product tile</strong> ("View details").</p>
+        <h4>Flow exercised</h4>
+        <p>DreamHub home → Matcher nav → Primary quiz (Bed upgrade · Temperature · Queen · Side · Medium · No preference) → <strong>View Matches!</strong> → uncheck <strong>Available to Try In-Store</strong> → <strong>mattresses</strong> tab → return <strong>matches</strong> → PDP (product tile) → quiz re-edit budget <strong>$2,000+</strong> → <strong>View Matches!</strong> → <strong>Fits Your Budget</strong> radio.</p>
 
-        <h4>Results vs documentation</h4>
+        <h4>Results vs doc</h4>
         <div class="table-wrap">
           <table>
-            <thead><tr><th>Phase</th><th>Expected</th><th>Observed</th><th>Match?</th></tr></thead>
+            <thead><tr><th>Phase</th><th>Expected (doc)</th><th>Observed (prod)</th><th>Match?</th></tr></thead>
             <tbody>
-              <tr><td><strong>Matcher load</strong></td><td>Eager shell APIs</td><td>GET financing, defaultMessaging, recommendedAccessories, accessorySizeMapping, closeststore (×2), tRPC getWarrantySkus, getUnbxdResults (autosuggest)</td><td>Partial — no <code>accessoryMapping</code>, <code>createCart</code>, or <code>cartManagement</code></td></tr>
+              <tr><td><strong>Matcher load</strong></td><td>Eager shell APIs + chained try-in-store</td><td><code>GET financing</code>, <code>defaultMessaging</code>, <code>recommendedAccessories</code>, <code>accessorySizeMapping</code>, <code>closeststore</code>, <strong><code>getTryInStoreData</code></strong> (×2, storeId=132002), tRPC <code>getWarrantySkus</code>, tRPC <code>getUnbxdResults</code> (autosuggest)</td><td>Yes for shell + try-in-store — still no <code>accessoryMapping</code>, <code>createCart</code>, or <code>cartManagement</code></td></tr>
               <tr><td><strong>Quiz answers</strong></td><td>No API calls</td><td>No matcher API calls while answering Q1–Q6</td><td>Yes</td></tr>
-              <tr><td><strong>View Matches</strong></td><td><code>POST /api/matches</code> then <code>POST /api/updateTopItems</code></td><td>Both fired (200); then <code>POST /api/atpCache?mattressSize=Queen</code></td><td>Yes (+ ATP on demand)</td></tr>
-              <tr><td><strong>Mattresses tab</strong></td><td>tRPC <code>getUnbxdResults</code></td><td>Three category fetches: 15-row, 3-row Top Matches IDs, 27-row full list</td><td>Yes — dual/triple fetch confirmed</td></tr>
-              <tr><td><strong>Return to matches</strong></td><td>Session cache — no repeat</td><td>Only <strong>one</strong> <code>POST /api/matches</code> in entire session</td><td>Yes</td></tr>
-              <tr><td><strong>PDP from match card</strong></td><td><code>productDetails</code> + <code>productPromos</code></td><td><code>productDetails</code> (144197P), <code>productPromos</code>, <code>financingLinks?zipcode=99352</code></td><td>Yes — ratings embedded</td></tr>
-              <tr><td><strong>PDP from PLP tile</strong></td><td>Same PDP APIs</td><td>TEMPUR-LuxeBreeze tile → <code>productDetails</code> (143781P), <code>productPromos</code>, <code>financingLinks</code>, <code>atpCache</code></td><td>Yes</td></tr>
+              <tr><td><strong>View Matches</strong></td><td><code>POST /api/matches</code> then <code>POST /api/updateTopItems</code></td><td>Both 200; query included <code>enableMatchesBudgetToggleNewDesign=true</code>; bodies included <code>isAvailableTryInStore: true</code>; then <code>POST /api/atpCache?mattressSize=Queen</code></td><td>Yes</td></tr>
+              <tr><td><strong>Try-in-store toggle off</strong></td><td>Re-slice; top-items with flag false; no second matches</td><td><code>POST /api/updateTopItems</code> with <code>isAvailableTryInStore: false</code> only — <strong>no</strong> second <code>/api/matches</code></td><td>Yes</td></tr>
+              <tr><td><strong>Mattresses tab</strong></td><td>tRPC <code>getUnbxdResults</code> (category)</td><td>Category Unbxd fetches observed (rows 3 + 27 in this pass)</td><td>Yes</td></tr>
+              <tr><td><strong>Return to matches</strong></td><td>Session cache — no repeat matches</td><td>No additional <code>/api/matches</code> on tab return</td><td>Yes</td></tr>
+              <tr><td><strong>PDP</strong></td><td><code>productDetails</code> + promos (+ ATP/financing as needed)</td><td><code>productDetails</code> (144043P), <code>productPromos</code>, <code>financingLinks?zipcode=99352</code>; ATP seen around PLP/PDP interactions</td><td>Yes</td></tr>
+              <tr><td><strong>Budget radiogroup</strong></td><td>Re-slice without second matches</td><td>With <strong>$2,000+</strong>, UI shows <strong>Best Matches</strong> / <strong>Fits Your Budget</strong>; selecting Fits Your Budget changed cards with <strong>no</strong> new <code>/api/matches</code>. Radiogroup <strong>hidden</strong> when budget is <strong>No preference</strong></td><td>Yes (+ UX label update)</td></tr>
+              <tr><td><strong>Quiz re-edit</strong></td><td><code>action</code> + <code>inboundRecommenderLogId</code></td><td>Re-submit body: <code>action: "edit - view/edit"</code>, <code>inboundRecommenderLogId: 19565796</code>, <code>budgetValue: "2000-10000"</code>, <code>priceRange: ["2000-plus"]</code></td><td>Yes</td></tr>
               <tr><td><strong>Legacy V1</strong></td><td>Not used</td><td>No <code>POST /api/recommendedProducts</code></td><td>Yes</td></tr>
             </tbody>
           </table>
         </div>
 
-        <h4>PDP detail — product tile click</h4>
-        <p><strong>Entry point.</strong> Mattresses tab → <strong>View details</strong> on TEMPUR-LuxeBreeze® Medium Hybrid 13″ (SKU <strong>143781P</strong>).</p>
-        <p><strong>UI confirmed.</strong> Full PDP with image carousel, reviews (1402), size selector (Queen), in-store availability, delivery by zip, <strong>Add to Cart</strong>, expandable Product Details / Specifications / Warranty sections, <strong>Back</strong> button.</p>
-
+        <h4>Matches payload highlights (2026-07-24)</h4>
         <div class="table-wrap">
           <table>
-            <thead><tr><th>#</th><th>Call</th><th>Purpose</th></tr></thead>
+            <thead><tr><th>Field</th><th>Sample</th></tr></thead>
             <tbody>
-              <tr><td>1</td><td><code>GET /api/trpc/productDetails?productId=143781P</code></td><td>Full product data, variants, ratings</td></tr>
-              <tr><td>2</td><td><code>POST /api/productPromos</code></td><td>Promotional badges</td></tr>
-              <tr><td>3</td><td><code>GET /api/financingLinks?zipcode=99352</code></td><td>Apply-now financing link</td></tr>
-              <tr><td>4</td><td><code>POST /api/atpCache?mattressSize=Queen</code></td><td>Delivery date for selected variant</td></tr>
+              <tr><td>Query</td><td><code>enableMatchesBudgetToggleNewDesign=true</code></td></tr>
+              <tr><td><code>customerResponses.reason</code></td><td><code>bed-upgrade</code></td></tr>
+              <tr><td><code>customerResponses.mattressSize</code></td><td><code>Queen</code></td></tr>
+              <tr><td><code>isAvailableTryInStore</code></td><td><code>true</code> on fetch (checkbox default on)</td></tr>
+              <tr><td><code>updateTopItems.topItems</code> (flag on)</td><td>Dual-band string with <code>~</code> separator, e.g. <code>144043P,143781P,144077P~144077P,143781P,144041P</code></td></tr>
             </tbody>
           </table>
         </div>
 
-        <p><strong>Not fired:</strong> separate <code>GET /api/productRatings</code> (Bazaarvoice inline on PDP), <code>GET /api/productXRayDetail</code> (only on icon click).</p>
-
-        <h4>Observed call order</h4>
+        <h4>Observed call order (authenticated session)</h4>
         <div class="diagram">
           <div class="mermaid">
 sequenceDiagram
@@ -1583,41 +1596,41 @@ sequenceDiagram
     MM->>BFF: GET recommendedAccessories
     MM->>BFF: GET accessorySizeMapping
     MM->>BFF: GET closeststore
+    MM->>BFF: GET getTryInStoreData
     MM->>BFF: tRPC getWarrantySkus
   end
   User->>MM: Answer quiz 6/6
   Note over MM: No API calls
   User->>MM: View Matches
-  MM->>BFF: POST matches
+  MM->>BFF: POST matches with isAvailableTryInStore
   MM->>BFF: POST updateTopItems
   MM->>BFF: POST atpCache Queen
+  User->>MM: Uncheck Try In-Store
+  MM->>BFF: POST updateTopItems flag false
+  Note over MM: No second matches
   User->>MM: mattresses tab
-  MM->>BFF: tRPC getUnbxdResults category x3
+  MM->>BFF: tRPC getUnbxdResults category
   User->>MM: matches tab
   Note over MM: Cache restore no repeat matches
-  User->>MM: Click match pairing card
+  User->>MM: Open PDP
   MM->>BFF: tRPC productDetails
   MM->>BFF: POST productPromos
   MM->>BFF: GET financingLinks
-  User->>MM: mattresses tab View details tile
-  MM->>BFF: tRPC productDetails
-  MM->>BFF: POST productPromos
-  MM->>BFF: GET financingLinks
-  MM->>BFF: POST atpCache Queen
           </div>
         </div>
 
-        <h4>Deviations &amp; follow-ups</h4>
+        <h4>Deviations and follow-ups</h4>
         <ul>
           <li><strong><code>accessoryMapping</code> GET</strong> not seen — may be gated by <code>enableCRTAccessories</code> flag.</li>
-          <li><strong><code>getTryInStoreData</code></strong> not seen in 2026-06-04 capture — route added in repomix 2026-06-25; re-validate on next prod walkthrough.</li>
-          <li><strong><code>isAvailableTryInStore</code> on matches/top-items</strong> — added 2026-07-23 behind <code>enableMatchesBudgetToggleNewDesign</code>; not in live capture.</li>
-          <li><strong>My Store switch / View Matcher reset</strong> — <code>useApplyMyStoreUpdate</code> and <code>useLegacyViewMatcherRedirect</code> (2026-07-23); not exercised in live capture.</li>
           <li><strong>Cart init</strong> (<code>createCart</code> / <code>cartManagement</code>) not seen — cart may use CPOS/tRPC path or initialize elsewhere in DreamHub shell.</li>
           <li><strong>Search PLP</strong> (<code>queryType: search</code>) not exercised — only autosuggest on header search mount.</li>
-          <li><strong>Product ratings</strong> — no standalone <code>GET /api/productRatings</code> on PDP open; reviews render from <code>productDetails</code> response.</li>
+          <li><strong>My Store switch / View Matcher reset</strong> — still not exercised live.</li>
           <li><strong>Add to cart</strong> not exercised — run separately to confirm CPOS vs D365 path.</li>
+          <li><strong>UI copy:</strong> budget control is <strong>Best Matches / Fits Your Budget</strong> (not a "View Budget Matches" button) when <code>enableMatchesBudgetToggleNewDesign</code> is on and a budget is set.</li>
+          <li><strong>Fallback banners</strong> — not observed this session (tryable inventory present).</li>
         </ul>
+
+        <p>Previous UX validation (quiz copy, tabs, match pairings) is in <a href="matcher-app-overview.html">matcher-app-overview.html</a> (Live site validation 2026-06-04); Matches interactions refreshed <strong>2026-07-24</strong>.</p>
 
         <h4>Related docs</h4>
         <ul>
@@ -1630,7 +1643,7 @@ sequenceDiagram
       </section>
 
       <footer>
-        <p>DreamHub Engineering · Mattress Matcher Knowledge Hub · Validated prod 2026-06-04 · Code sync 2026-06-25 / <strong>2026-07-23</strong></p>
+        <p>DreamHub Engineering · Mattress Matcher Knowledge Hub · Validated prod <strong>2026-07-24</strong> · Code sync 2026-06-25 / <strong>2026-07-23</strong></p>
       </footer>
 
     </article>

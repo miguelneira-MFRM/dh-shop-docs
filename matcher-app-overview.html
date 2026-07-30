@@ -254,7 +254,7 @@
     <div class="byline">
       <div class="byline-item"><strong>Audience</strong>Product owners, QA, engineers</div>
       <div class="byline-item"><strong>Scope</strong>Matcher master app (~2,202 files)</div>
-      <div class="byline-item"><strong>Validated</strong>2026-06-04 (prod UX)</div>
+      <div class="byline-item"><strong>Validated</strong>2026-07-24 (network/UX); prior UX 2026-06-04</div>
       <div class="byline-item"><strong>Code sync</strong>Repomix 2026-07-23</div>
     </div>
   </header>
@@ -418,7 +418,7 @@ flowchart TB
           <li><strong>Fetch matches</strong> — Client POST to <code>/mattressmatcher/api/matches</code>. See <a href="matcher-matches-api-overview.html">Matches API overview</a> for BFF internals and QA troubleshooting.</li>
           <li><strong>Server processing</strong> — <code>/api/matches</code> → external Matches API (V2) + foundation accessory mappings.</li>
           <li><strong>Map to UI</strong> — <code>mapNewQuizResponseToMatches()</code> → top 3 mattress + base pairings with why-it-works, financing, delivery.</li>
-          <li><strong>Show matches</strong> — Header tabs switch to <strong>post-quiz mode</strong>: <code>matcher quiz</code> | <code>matches</code> | <code>mattresses</code> | <code>foundations</code> | <code>bedding</code>. Matches tab shows <strong>"your customer's Top Matches"</strong>, a <strong>Matcher Summary</strong> narrative, 3 pairings with <strong>Add Both To Cart</strong>, <strong>Pair &amp; save</strong> financing (via <code>useFinancingOffer</code> + config tiers), optional <strong>try-in-store</strong> toggle, <strong>View Budget Matches</strong> (when budget preference allows), and <strong>View All Mattress/Foundation Matches</strong> links.</li>
+          <li><strong>Show matches</strong> — Header tabs switch to <strong>post-quiz mode</strong>: <code>matcher quiz</code> | <code>matches</code> | <code>mattresses</code> | <code>foundations</code> | <code>bedding</code>. Matches tab shows <strong>"your customer's Top Matches"</strong>, a <strong>Matcher Summary</strong> narrative, 3 pairings with <strong>Add Both To Cart</strong>, <strong>Pair &amp; save</strong> financing (via <code>useFinancingOffer</code> + config tiers), optional <strong>Available to Try In-Store</strong> checkbox, <strong>Best Matches / Fits Your Budget</strong> radiogroup (when budget preference allows), and <strong>View All Mattress/Foundation Matches</strong> links.</li>
         </ol>
 
         <div class="diagram">
@@ -527,7 +527,7 @@ sequenceDiagram
         <h2><span class="section-num">§ 06 — Results</span>Results / matches experience</h2>
         <p>After <strong>View Matches!</strong>, the app switches to the <strong>new matches view</strong> (<code>NewDreamhubMatcher</code>) — not the legacy <code>SummaryPage</code> / <code>results.tsx</code> PLP path (though that code still exists for migration).</p>
 
-        <h3>Live prod UI (validated 2026-06-04)</h3>
+        <h3>Live prod UI (validated 2026-06-04; Matches interactions refreshed 2026-07-24)</h3>
         <ul>
           <li><strong>Header tabs (post-quiz):</strong> <code>matcher quiz</code> · <code>matches</code> · <code>mattresses</code> · <code>foundations</code> · <code>bedding</code></li>
           <li><strong>Matches tab content:</strong>
@@ -537,8 +537,8 @@ sequenceDiagram
               <li><strong>3 match pairings</strong> — mattress + foundation side-by-side, <strong>Match</strong> badge, add-to-cart, financing, try-in-store, delivery</li>
               <li><strong>"Why this match works for your customer"</strong> — attribute chips (e.g. Cooling, Pressure Relief)</li>
               <li><strong>Add Both To Cart</strong> per pairing; <strong>Pair &amp; save</strong> combined financing (computed client-side via <code>useFinancingOffer</code> from App Config tiers — distinct from page-load <code>GET /api/financing</code>)</li>
-              <li><strong>Try-in-store toggle</strong> — Filters match pairings to in-store-tryable SKUs; may show a fallback banner when fallback foundation SKUs (D365 IDs starting with <code>F</code>) appear in the active slice. When <code>enableMatchesBudgetToggleNewDesign</code> is on, the toggle value is also sent to the recommender as <code>isAvailableTryInStore</code></li>
-              <li><strong>View Budget Matches</strong> — Re-slices the same recommendation list (no second matches API call). Indexing differs when the budget-toggle new design flag is on (separate best/budget bands, optionally driven by API <code>budgetIndexStart</code>, split further by try-in-store vs online)</li>
+              <li><strong>Available to Try In-Store</strong> checkbox — Filters match pairings to in-store-tryable SKUs (often checked by default). Live (2026-07-24): toggle off fires <code>updateTopItems</code> with <code>isAvailableTryInStore: false</code> and does <strong>not</strong> re-call <code>/api/matches</code>. May show a fallback banner when fallback foundation SKUs (D365 IDs starting with <code>F</code>) appear in the active slice</li>
+              <li><strong>Best Matches / Fits Your Budget</strong> — Radiogroup when quiz budget ≠ no preference and <code>enableMatchesBudgetToggleNewDesign</code> is on (prod <strong>2026-07-24</strong>). Re-slices the same recommendation list (no second matches API call). Hidden for <strong>No preference</strong> budget</li>
               <li><strong>FirmCare nudge:</strong> <em>"Protect your investment. Protect your sleep. Learn More"</em></li>
               <li><strong>View All Mattress Matches</strong> / <strong>View All Foundation Matches</strong> buttons</li>
             </ul>
@@ -709,6 +709,26 @@ sequenceDiagram
           </table>
         </div>
         <p><strong>Overlay follow-up:</strong> Promote category tab patterns and legacy favorites/email note into <code>overlays/02-results-page.overlay.md</code> during sprint review.</p>
+
+        <h3>Live site validation (2026-07-24)</h3>
+        <p>Network + Matches UX refresh on the same prod store/SE. Details and API tables: <a href="matcher-api-triggers.html#validation">matcher-api-triggers.html — Live validation</a>.</p>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>#</th><th>Claim</th><th>Result</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>1</td><td>Chained <code>getTryInStoreData</code> after accessories</td><td>Confirmed</td></tr>
+              <tr><td>2</td><td><code>enableMatchesBudgetToggleNewDesign</code> on in prod</td><td>Confirmed (<code>true</code> on matches query)</td></tr>
+              <tr><td>3</td><td><code>isAvailableTryInStore</code> on matches / top-items</td><td>Confirmed</td></tr>
+              <tr><td>4</td><td>Try-in-store toggle → top-items only (no second matches)</td><td>Confirmed</td></tr>
+              <tr><td>5</td><td>Cache restore on return to Matches</td><td>Confirmed</td></tr>
+              <tr><td>6</td><td>Budget UI = <strong>Best Matches / Fits Your Budget</strong> radiogroup</td><td>Confirmed (hidden for No preference)</td></tr>
+              <tr><td>7</td><td>Quiz re-edit sends inbound recommender log</td><td>Confirmed</td></tr>
+              <tr><td>8</td><td>My Store switch / View Matcher reset / add-to-cart</td><td>Not exercised</td></tr>
+            </tbody>
+          </table>
+        </div>
       </section>
 
       <section id="repomix-sync">
@@ -739,14 +759,14 @@ sequenceDiagram
             </thead>
             <tbody>
               <tr><td><strong>Matches try-in-store flag</strong></td><td><code>applyMatchesTryInStorePayload</code> — when <code>enableMatchesBudgetToggleNewDesign</code> is on, stamps <code>isAvailableTryInStore</code> onto <code>POST /api/matches</code> (and top-items follows the same gate)</td></tr>
-              <tr><td><strong>Budget / try-in-store slicing</strong></td><td>New design flag changes how View Budget Matches and try-in-store pick product indices (optional <code>budgetIndexStart</code> from API)</td></tr>
+              <tr><td><strong>Budget / try-in-store slicing</strong></td><td>New design flag changes how <strong>Best Matches / Fits Your Budget</strong> and try-in-store pick product indices (optional <code>budgetIndexStart</code> from API). Live UI uses that radiogroup (not a "View Budget Matches" button) when flag is on</td></tr>
               <tr><td><strong>My Store switch</strong></td><td><code>useApplyMyStoreUpdate</code> — V2→legacy redirect, cart → Mattresses tab, new-matcher → quiz landing, zip via <code>zipCodeSE</code></td></tr>
               <tr><td><strong>View Matcher entry</strong></td><td><code>useLegacyViewMatcherRedirect</code> — SSR-gated session reset + strip recommender log from URL</td></tr>
             </tbody>
           </table>
         </div>
 
-        <p><strong>Not yet live-validated:</strong> <code>GET /api/getTryInStoreData</code> call order; try-in-store toggle / fallback banners; <code>isAvailableTryInStore</code> on matches/top-items; My Store switch and View Matcher reset flows on prod.</p>
+        <p><strong>Not yet live-validated:</strong> My Store switch and View Matcher reset flows on prod.</p>
       </section>
 
       <section id="documentation-gaps">
@@ -756,7 +776,7 @@ sequenceDiagram
 
       <footer>
         <span><strong>Maintainer</strong> Matcher knowledge hub — update after sprint sync or prod UX changes</span>
-        <span><strong>Last validated</strong> 2026-06-04 (prod UX) · code sync 2026-07-23</span>
+        <span><strong>Last validated</strong> 2026-07-24 (network/UX); prior UX 2026-06-04 · code sync 2026-07-23</span>
       </footer>
 
     </article>
