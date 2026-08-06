@@ -537,15 +537,15 @@ sequenceDiagram
               <li><strong>3 match pairings</strong> — mattress + foundation side-by-side, <strong>Match</strong> badge, add-to-cart, financing, try-in-store, delivery</li>
               <li><strong>"Why this match works for your customer"</strong> — attribute chips (e.g. Cooling, Pressure Relief)</li>
               <li><strong>Add Both To Cart</strong> per pairing; <strong>Pair &amp; save</strong> combined financing (computed client-side via <code>useFinancingOffer</code> from App Config tiers — distinct from page-load <code>GET /api/financing</code>)</li>
-              <li><strong>Available to Try In-Store</strong> checkbox — Filters match pairings to in-store-tryable SKUs (often checked by default). Live (2026-07-24): toggle off fires <code>updateTopItems</code> with <code>isAvailableTryInStore: false</code> and does <strong>not</strong> re-call <code>/api/matches</code>. May show a fallback banner when fallback foundation SKUs (D365 IDs starting with <code>F</code>) appear in the active slice</li>
+              <li><strong>Available to Try In-Store</strong> checkbox — Filters match pairings to in-store-tryable SKUs (often checked by default). Live (2026-07-24): toggle off fires <code>updateTopItems</code> with <code>isAvailableTryInStore: false</code> and does <strong>not</strong> re-call <code>/api/matches</code>. May show a fallback banner when fallback foundation SKUs (D365 IDs starting with <code>F</code>) appear in the active slice — copy: <strong>"No exact matches found. Please see these in-store alternatives."</strong></li>
               <li><strong>Best Matches / Fits Your Budget</strong> — Radiogroup when quiz budget ≠ no preference and <code>enableMatchesBudgetToggleNewDesign</code> is on (prod <strong>2026-07-24</strong>). Re-slices the same recommendation list (no second matches API call). Hidden for <strong>No preference</strong> budget</li>
               <li><strong>FirmCare nudge:</strong> <em>"Protect your investment. Protect your sleep. Learn More"</em></li>
-              <li><strong>View All Mattress Matches</strong> / <strong>View All Foundation Matches</strong> buttons</li>
+              <li><strong>View All Mattress Matches</strong> / <strong>View All Foundation Matches</strong> buttons — when try-in-store is active, Unbxd top-3 + remaining fetches <strong>preserve</strong> the Try In-Store store filter</li>
             </ul>
           </li>
         </ul>
 
-        <p><strong>Category PLP tabs (mattresses · foundations):</strong> When <strong>Try In-Store</strong> filter is active and every visible product is online-only for the store, a fallback banner may appear (same helper pattern as matches — UI only, no extra API).</p>
+        <p><strong>Category PLP tabs (mattresses · foundations · bedding):</strong> Product cards can batch Spring Cloud try-in-store via <code>useTryInStoreAvailability</code>. The <strong>Mattresses / Bedding</strong> PLP fallback banner is <strong>not</strong> shown (2026-08-06). Matches-tab fallback banner is separate (copy above).</p>
         <p><strong>Legacy Results components</strong> (<code>src/components/Results/*</code>) power the <strong>category PLP tabs</strong> below.</p>
 
         <h3>Category tabs (mattresses · foundations · bedding)</h3>
@@ -584,7 +584,7 @@ sequenceDiagram
               <tr><td><strong>Matching (legacy)</strong></td><td><code>POST /api/recommendedProducts</code> (V1)</td></tr>
               <tr><td><strong>Commerce</strong></td><td><code>/api/cartManagement</code>, <code>/api/createCart</code>, <code>/api/atpCache</code></td></tr>
               <tr><td><strong>Enrichment</strong></td><td><code>/api/productRatings</code>, <code>/api/productPromos</code>, <code>/api/productXRayDetail</code></td></tr>
-              <tr><td><strong>Try-in-store</strong></td><td><code>GET /api/getTryInStoreData</code> — enriches adjustable bases with per-store try-in-store flags (chained after <code>recommendedAccessories</code>); optional <code>isAvailableTryInStore</code> on <code>POST /api/matches</code> and <code>POST /api/updateTopItems</code> when budget-toggle new design is on</td></tr>
+              <tr><td><strong>Try-in-store</strong></td><td><code>GET /api/getTryInStoreData</code> — adjustable bases on PLP/Quiz/Matches tabs; PLP/Search card batches via <code>useTryInStoreAvailability</code>; PDP uses <code>tryInStore</code> on tRPC <code>productDetails</code>. Optional <code>isAvailableTryInStore</code> on <code>POST /api/matches</code> and <code>POST /api/updateTopItems</code> when budget-toggle new design is on</td></tr>
               <tr><td><strong>Shell / catalog</strong></td><td><code>/api/financing</code>, <code>/api/defaultMessaging</code>, <code>/api/accessoryMapping</code>, <code>/api/recommendedAccessories</code>, <code>/api/zipCodeSE</code> (also after My Store switch)</td></tr>
               <tr><td><strong>Platform</strong></td><td><code>/api/trpc/[trpc]</code> (Unbxd PLP, productDetails, Unify, CPOS cart)</td></tr>
             </tbody>
@@ -608,7 +608,7 @@ sequenceDiagram
               <tr><td><strong><code>cart</code></strong></td><td>D365 basket state</td></tr>
               <tr><td><strong><code>zipcode</code></strong></td><td>Customer zip → delivery/ATP</td></tr>
               <tr><td><strong><code>atp-cache</code> / <code>atp-oos-cache</code></strong></td><td>Delivery date caching</td></tr>
-              <tr><td><strong><code>accessories</code> / <code>accessories-mapping</code></strong></td><td>Foundation catalog; chains <code>getTryInStoreData</code> for adjustable-base try-in-store flags</td></tr>
+              <tr><td><strong><code>accessories</code> / <code>accessories-mapping</code></strong></td><td>Foundation catalog; tab-gated <code>getTryInStoreData</code> for adjustable bases on PLP / Quiz / Matches</td></tr>
               <tr><td><strong><code>analytics</code></strong></td><td>Tealium/event tracking</td></tr>
               <tr><td><strong><code>email</code> / <code>email-content</code></strong></td><td><strong>Legacy</strong> email results (<code>Results/EmailResults</code>)</td></tr>
               <tr><td><strong><code>dreamhub-search</code></strong></td><td>In-app product search</td></tr>
@@ -766,17 +766,34 @@ sequenceDiagram
           </table>
         </div>
 
-        <p><strong>Not yet live-validated:</strong> My Store switch and View Matcher reset flows on prod.</p>
+        <p><strong>Not yet live-validated this pass:</strong> Tab-gated / PLP-card <code>getTryInStoreData</code> timing after 2026-08-06; PDP Spring Cloud <code>tryInStore</code>; My Store switch / View Matcher reset / add-to-cart.</p>
+
+        <h3>2026-08-06</h3>
+        <p>Compared to <code>2026-07-23</code> (~2,202 → ~2,206 files). Behavior focus is try-in-store call sites and PLP/Matches consistency:</p>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Area</th><th>What changed</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><strong>Try-in-store timing</strong></td><td>Adjustable-base <code>getTryInStoreData</code> limited to <strong>PLP / Quiz / Matches</strong> tabs (not every cold load). New <code>useTryInStoreAvailability</code> batches Spring Cloud flags for PLP/Search cards</td></tr>
+              <tr><td><strong>PDP availability</strong></td><td>Uses productDetails <code>tryInStore</code> (store-scoped Spring Cloud) instead of the old size-options heuristic</td></tr>
+              <tr><td><strong>Fallback banners</strong></td><td>Matches copy → <em>"No exact matches found…"</em>; Mattresses PLP fallback banner removed</td></tr>
+              <tr><td><strong>View All PLP</strong></td><td>Try-in-store filter preserved on Unbxd top-3 + remaining fetches (stops online-only foundations leaking in)</td></tr>
+              <tr><td><strong>updateTopItems</strong></td><td>Also fires on Matches session restore; client <code>fetch</code> + <code>keepalive</code> + RUM failure logging</td></tr>
+            </tbody>
+          </table>
+        </div>
       </section>
 
       <section id="documentation-gaps">
         <h2><span class="section-num">§ 14 — Gaps</span>Documentation gaps</h2>
-        <p>Overlays <code>04</code> and <code>06</code> are still placeholders; overlay <code>05</code> covers matches-init, financing-offer, My Store switch, and View Matcher reset. API trigger timing is in <a href="matcher-api-triggers.html"><strong>matcher-api-triggers.html</strong></a>. Re-validate UX claims against prod after each repomix sync.</p>
+        <p>Overlays <code>04</code> and <code>06</code> are still placeholders; overlay <code>05</code> covers matches-init, financing-offer, try-in-store hooks, My Store switch, and View Matcher reset. API trigger timing is in <a href="matcher-api-triggers.html"><strong>matcher-api-triggers.html</strong></a>. Re-validate UX claims against prod after each repomix sync.</p>
       </section>
 
       <footer>
         <span><strong>Maintainer</strong> Matcher knowledge hub — update after sprint sync or prod UX changes</span>
-        <span><strong>Last validated</strong> 2026-07-24 (network/UX); prior UX 2026-06-04 · code sync 2026-07-23</span>
+        <span><strong>Last validated</strong> 2026-07-24 (network/UX); code sync review 2026-08-06</span>
       </footer>
 
     </article>

@@ -949,8 +949,8 @@ sequenceDiagram
           <table>
             <thead><tr><th>API</th><th>Relationship</th></tr></thead>
             <tbody>
-              <tr><td><code>POST /api/updateTopItems</code></td><td>After matches / budget re-slice — records top item IDs with log id</td></tr>
-              <tr><td><code>GET /api/getTryInStoreData</code></td><td>Enriches adjustable bases catalog — separate from matches body flag</td></tr>
+              <tr><td><code>POST /api/updateTopItems</code></td><td>After matches / budget re-slice / Matches session restore — records top item IDs with log id; optional <code>isAvailableTryInStore</code> under the design flag</td></tr>
+              <tr><td><code>GET /api/getTryInStoreData</code></td><td>Adjustable-base enrichment on PLP/Quiz/Matches tabs; also PLP/Search card batches — separate from matches body flag</td></tr>
               <tr><td><code>POST /api/recommendedProducts</code></td><td>Legacy V1 — not for new-matcher troubleshooting</td></tr>
             </tbody>
           </table>

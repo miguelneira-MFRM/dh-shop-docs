@@ -852,8 +852,8 @@ flowchart TB
                 <div class="route-head"><code class="route-path">/api/getTryInStoreData</code><span class="method get">GET</span></div>
                 <div class="route-meta">
                   <div class="route-meta-row"><span class="route-meta-label">Upstream</span><span class="route-meta-value">Azure Spring (<code>tryInStore</code> on products)</span></div>
-                  <div class="route-meta-row"><span class="route-meta-label">Trigger</span><span class="route-meta-value">After adjustable bases load; re-fires on store change</span></div>
-                  <div class="route-meta-row"><span class="route-meta-label">Caller</span><span class="route-meta-value"><code>RecommendedAccessoriesProvider</code></span></div>
+                  <div class="route-meta-row"><span class="route-meta-label">Trigger</span><span class="route-meta-value">(1) Adjustable bases when active tab is PLP <strong>or</strong> Quiz/Matches; (2) PLP/Search card ID batches via <code>useTryInStoreAvailability</code>. Not eager on every cold load</span></div>
+                  <div class="route-meta-row"><span class="route-meta-label">Caller</span><span class="route-meta-value"><code>RecommendedAccessoriesProvider</code>; <code>useTryInStoreAvailability</code></span></div>
                 </div>
               </div>
               <div class="route">
@@ -914,7 +914,7 @@ flowchart TB
                 <div class="route-head"><code class="route-path">/api/updateTopItems</code><span class="method post">POST</span></div>
                 <div class="route-meta">
                   <div class="route-meta-row"><span class="route-meta-label">Upstream</span><span class="route-meta-value">Recommender top-items API</span></div>
-                  <div class="route-meta-row"><span class="route-meta-label">Trigger</span><span class="route-meta-value">After successful matches fetch; toggling <strong>Fits Your Budget</strong> / try-in-store (new-design Matches UI). Same flag gates optional <code>isAvailableTryInStore</code> on the top-items body</span></div>
+                  <div class="route-meta-row"><span class="route-meta-label">Trigger</span><span class="route-meta-value">After successful matches fetch; toggling <strong>Fits Your Budget</strong> / try-in-store; also on Matches session restore (2026-08-06). Same flag gates optional <code>isAvailableTryInStore</code> on the top-items body</span></div>
                   <div class="route-meta-row"><span class="route-meta-label">Caller</span><span class="route-meta-value"><code>useMatchesRecommendations.fireUpdateTopItems</code></span></div>
                 </div>
               </div>
@@ -1085,14 +1085,19 @@ flowchart TB
                 <td>Stamps <code>isAvailableTryInStore</code> when <code>enableMatchesBudgetToggleNewDesign</code> is on; otherwise returns payload unchanged</td>
               </tr>
               <tr>
+                <td><code>useTryInStoreAvailability</code></td>
+                <td>PLP / Search product lists with store ID</td>
+                <td>Batched <code>getTryInStoreData</code> for visible product IDs (cache + debounce)</td>
+              </tr>
+              <tr>
                 <td><code>shouldShowTryInStoreFallbackBanner</code></td>
-                <td>Category PLP with Try In-Store filter active; all visible products online-only for store</td>
-                <td>UI banner — no network</td>
+                <td>Util still present; <strong>Mattresses / Bedding PLP no longer mount</strong> the PLP fallback banner (2026-08-06)</td>
+                <td>UI helper — no network</td>
               </tr>
               <tr>
                 <td><code>shouldShowMatchesTryInStoreFallbackBanner</code></td>
                 <td>Matches tab when fallback SKUs (<code>F…</code> D365 IDs) in active pairing slice</td>
-                <td>UI banner — no network</td>
+                <td>UI banner — no network; copy <em>"No exact matches found. Please see these in-store alternatives."</em></td>
               </tr>
             </tbody>
           </table>
@@ -1124,7 +1129,6 @@ flowchart TB
               <li><code>financing</code></li>
               <li><code>defaultMessaging</code></li>
               <li><code>recommendedAccessories</code></li>
-              <li><code>getTryInStoreData</code> (chained)</li>
               <li><code>accessorySizeMapping</code></li>
               <li><code>accessoryMapping</code> (GET)</li>
               <li>cart create/get</li>
@@ -1141,6 +1145,8 @@ flowchart TB
             <h5>Tab-gated · lazy</h5>
             <ul>
               <li>tRPC <code>getUnbxdResults</code> per category</li>
+              <li>Adjustable-base <code>getTryInStoreData</code> on PLP / Quiz / Matches</li>
+              <li>PLP/Search card <code>getTryInStoreData</code> batches</li>
               <li>Cached on return</li>
             </ul>
           </div>
@@ -1150,7 +1156,7 @@ flowchart TB
               <li><code>cartManagement</code> POST</li>
               <li><code>atpCache</code>, <code>atpOOSCache</code></li>
               <li><code>productRatings</code>, <code>productPromos</code>, <code>productXRayDetail</code></li>
-              <li><code>productDetails</code>, <code>closeststore</code>, <code>financingLinks</code></li>
+              <li><code>productDetails</code> (incl. PDP <code>tryInStore</code>), <code>closeststore</code>, <code>financingLinks</code></li>
             </ul>
           </div>
         </div>
@@ -1165,20 +1171,33 @@ flowchart TB
 
       <!-- ===== Section 4: Try-in-store ===== -->
       <section id="try-in-store">
-        <h2><span class="section-num">§ 04 — Enrichment</span>Try-in-store enrichment (2026-06-25)</h2>
+        <h2><span class="section-num">§ 04 — Enrichment</span>Try-in-store enrichment (updated 2026-08-06)</h2>
 
-        <p>After <code>GET /api/recommendedAccessories</code> returns adjustable bases, <code>RecommendedAccessoriesProvider</code> chains <strong><code>GET /api/getTryInStoreData</code></strong> with adjustable-base D365 IDs and the resolved store ID (preferred store → Unify store → global store number). Re-fetches when store context changes. BFF proxies Azure Spring <code>/products?fields=id,tryInStore</code>.</p>
+        <p>BFF <code>GET /api/getTryInStoreData</code> proxies Azure Spring <code>/products?fields=id,tryInStore</code>. It is <strong>no longer</strong> an unconditional cold-load chain after accessories.</p>
+
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Caller</th><th>When</th><th>Purpose</th></tr></thead>
+            <tbody>
+              <tr><td><code>RecommendedAccessoriesProvider</code></td><td>Active tab is <strong>PLP</strong> or <strong>Quiz (WHY_SHOP)</strong> or <strong>Matches</strong>; store ID + adjustable bases present</td><td>Enrich foundation catalog <code>isAvailableToTryInStore</code></td></tr>
+              <tr><td><code>useTryInStoreAvailability</code></td><td>PLP / Search lists with visible product IDs + store ID</td><td>Card-level try-in-store map (400ms debounce, per-store cache; omitted IDs → online-only)</td></tr>
+              <tr><td>tRPC <code>productDetails</code></td><td>PDP open</td><td>PDP Available / Not available from Spring Cloud <code>tryInStore</code> (store-scoped)</td></tr>
+            </tbody>
+          </table>
+        </div>
 
         <h4>Fallback banner rules (UI only — no extra API)</h4>
         <div class="table-wrap">
           <table>
-            <thead><tr><th>Helper</th><th>Shows when</th></tr></thead>
+            <thead><tr><th>Surface</th><th>Behavior</th></tr></thead>
             <tbody>
-              <tr><td><code>shouldShowTryInStoreFallbackBanner</code></td><td>Try-in-store filter on, item count &gt; 0, and <strong>all</strong> visible PLP items are online-only for the store</td></tr>
-              <tr><td><code>shouldShowMatchesTryInStoreFallbackBanner</code></td><td>Fallback SKUs present (D365 IDs starting with <code>F</code>) in the active pairing slice — indices 0–2 when try-in-store mode is active, 3–5 for budget/alternate slice</td></tr>
+              <tr><td>Matches tab (<code>shouldShowMatchesTryInStoreFallbackBanner</code>)</td><td>Fallback SKUs (<code>F…</code> D365 IDs) in the active pairing slice. Copy: <strong>"No exact matches found. Please see these in-store alternatives."</strong></td></tr>
+              <tr><td>Category PLP</td><td><strong>Mattresses / Bedding do not show</strong> the PLP fallback banner (removed from FacetList for mattresses). Util <code>shouldShowTryInStoreFallbackBanner</code> may remain unused by that UI</td></tr>
             </tbody>
           </table>
         </div>
+
+        <p><strong>View All Mattress/Foundation Matches:</strong> When Matches try-in-store is active, Unbxd top-3 + remaining fetches <strong>keep</strong> the Try In-Store store filter.</p>
 
         <h3>Matches / top-items request flag (2026-07-23)</h3>
         <p>When feature flag <strong><code>enableMatchesBudgetToggleNewDesign</code></strong> is on:</p>
@@ -1192,8 +1211,9 @@ flowchart TB
           </table>
         </div>
         <p>No new BFF route — same contracts, optional field only. Recommender / top-items can use the flag for ranking or logging.</p>
+        <p><strong>View Matcher / cache restore (2026-08-06):</strong> Session restore of Matches also fires <code>POST /api/updateTopItems</code> (dual-band indices). Client uses <code>fetch</code> + <code>keepalive</code> and RUM-logs failures.</p>
 
-        <blockquote><p><strong>Live validation (2026-07-24):</strong> <code>GET /api/getTryInStoreData</code> confirmed after <code>recommendedAccessories</code> (store <strong>132002</strong>, adjustable-base product IDs). <code>enableMatchesBudgetToggleNewDesign=true</code> on prod; <code>isAvailableTryInStore</code> present on both <code>POST /api/matches</code> and <code>POST /api/updateTopItems</code>. Fallback banners still not forced in this session (all tryable SKUs).</p></blockquote>
+        <blockquote><p><strong>Live validation (2026-07-24):</strong> <code>GET /api/getTryInStoreData</code> confirmed after <code>recommendedAccessories</code> (store <strong>132002</strong>, adjustable-base product IDs) under the then-eager path. <code>enableMatchesBudgetToggleNewDesign=true</code> on prod; <code>isAvailableTryInStore</code> present on both <code>POST /api/matches</code> and <code>POST /api/updateTopItems</code>. Tab whitelist + PLP card batching are <strong>code-confirmed 2026-08-06</strong> — re-check network timing on next prod pass.</p></blockquote>
       </section>
 
       <!-- ===== Section 5: Phases ===== -->
@@ -1210,8 +1230,8 @@ flowchart TB
           <ol>
             <li>Browser navigates to <code>/mattressmatcher?StoreNumber=…&amp;SleepExpertID=…&amp;UnifySessionID=…</code>.</li>
             <li><strong>SSR</strong> (<code>getServerSideProps</code> on <code>pages/index.tsx</code>) injects Azure App Config, cart props, store, zip, translations, and feature flags including <code>isNewMatcherEnabled</code>.</li>
-            <li>React providers mount and fire <strong>parallel eager client calls</strong> — not gated by quiz progress.</li>
-            <li>After <code>recommendedAccessories</code> returns adjustable bases, <code>RecommendedAccessoriesProvider</code> chains <code>GET /api/getTryInStoreData</code> when a store ID is available.</li>
+            <li>React providers mount and fire <strong>parallel eager client calls</strong> — financing, messaging, accessories catalog, size mapping, etc.</li>
+            <li>Adjustable-base <code>GET /api/getTryInStoreData</code> runs only when the active tab is <strong>PLP / Quiz / Matches</strong> (and store + adjustable bases exist) — not as an unconditional cold-load chain.</li>
             <li>Cart initializes: <code>POST /api/createCart</code> if no basket UUID exists, otherwise <code>GET /api/cartManagement</code>.</li>
             <li>Quiz UI renders; no recommender call yet.</li>
           </ol>
@@ -1234,7 +1254,7 @@ sequenceDiagram
     Providers->>BFF: GET accessorySizeMapping
     Providers->>BFF: GET accessoryMapping
   end
-  Providers->>BFF: GET getTryInStoreData chained after accessories
+  Note over Providers,BFF: getTryInStoreData is tab-gated PLP Quiz Matches or PLP card batches
   alt No basket UUID
     Providers->>BFF: POST createCart
   else Existing basket
@@ -1250,7 +1270,7 @@ sequenceDiagram
               <tbody>
                 <tr><td><code>FinancingDetailProvider</code></td><td>Loads monthly payment thresholds for product cards</td></tr>
                 <tr><td><code>useGetAvailabilityMessages</code></td><td>Delivery lead-time copy for drop-ship messaging</td></tr>
-                <tr><td><code>RecommendedAccessoriesProvider</code></td><td>Foundation catalog lists; chains <code>getTryInStoreData</code> to enrich adjustable bases</td></tr>
+                <tr><td><code>RecommendedAccessoriesProvider</code></td><td>Foundation catalog; tab-gated <code>getTryInStoreData</code> for adjustable bases on PLP / Quiz / Matches</td></tr>
                 <tr><td><code>AccessorySizeMappingProvider</code></td><td>Size mappings required before matches payload</td></tr>
                 <tr><td><code>CartProvider</code></td><td>D365 basket initialization</td></tr>
               </tbody>
@@ -1282,7 +1302,7 @@ sequenceDiagram
           <ol>
             <li><code>useMatchesRecommendations</code> mounts with the Matches tab.</li>
             <li><strong><code>resolveMatchesInitAction</code></strong> picks one of: <code>skip</code>, <code>profile-preload</code> (prior profile log, first entry only), <code>restore-cache</code> (session <code>recommenderLogId</code>), or <code>fetch</code> (fresh submit / no cache).</li>
-            <li><strong>Cache / preload paths:</strong> Profile preload or session restore → <strong>no network</strong> (quiz re-submit always forces <code>fetch</code>).</li>
+            <li><strong>Cache / preload paths:</strong> Profile preload or session restore → <strong>no <code>/api/matches</code></strong> (quiz re-submit always forces <code>fetch</code>). Session restore still fires <code>POST /api/updateTopItems</code> (2026-08-06).</li>
             <li><strong>Fresh fetch:</strong> <code>formatNewRecommendationsPayload()</code> translates quiz answers → <code>MatchesRecommendationsPayload</code>.</li>
             <li>Client POST to <code>/api/matches</code> (with optional <code>?refresh=true</code> on manual refresh).</li>
             <li>BFF validates payload (422 if <code>customerResponses.mattressSize</code> missing).</li>
@@ -1328,7 +1348,7 @@ sequenceDiagram
               <tbody>
                 <tr><td><strong>Init action</strong></td><td><code>resolveMatchesInitAction</code> — <code>profile-preload</code> on first View Matcher entry with prior profile log; <code>restore-cache</code> when session has log; <code>fetch</code> on fresh quiz submit. Mount-only — tab switches do not re-run.</td></tr>
                 <tr><td><strong>Best Matches / Fits Your Budget</strong></td><td>Live UI (flag on): radiogroup <strong>"Best Matches"</strong> · <strong>"Fits Your Budget"</strong> (appears when quiz budget ≠ no preference). Client-side re-index of existing products — <strong>no second <code>/api/matches</code> call</strong>. Indexing depends on <code>enableMatchesBudgetToggleNewDesign</code>: <strong>flag off</strong> → indices <code>[3, 1, 4]</code> vs <code>[0, 1, 2]</code>; <strong>flag on</strong> → separate best/budget slices (optionally from API <code>budgetIndexStart</code>), further split by try-in-store vs online</td></tr>
-                <tr><td><strong>Try-in-store toggle</strong></td><td>Checkbox <strong>"Available to Try In-Store"</strong> (often checked by default). Client-side re-slice; live (2026-07-24) toggle off → <code>POST /api/updateTopItems</code> with <code>isAvailableTryInStore: false</code> and <strong>no</strong> second <code>/api/matches</code>. May show fallback banner via <code>shouldShowMatchesTryInStoreFallbackBanner</code> when <code>F…</code> foundations appear</td></tr>
+                <tr><td><strong>Try-in-store toggle</strong></td><td>Checkbox <strong>"Available to Try In-Store"</strong> (often checked by default). Client-side re-slice; live (2026-07-24) toggle off → <code>POST /api/updateTopItems</code> with <code>isAvailableTryInStore: false</code> and <strong>no</strong> second <code>/api/matches</code>. May show fallback banner via <code>shouldShowMatchesTryInStoreFallbackBanner</code> when <code>F…</code> foundations appear — copy: <strong>"No exact matches found. Please see these in-store alternatives."</strong></td></tr>
                 <tr><td><strong>Manual refresh</strong></td><td><code>refresh()</code> re-calls <code>/api/matches</code> with <code>?refresh=true</code></td></tr>
                 <tr><td><strong>Re-edit session</strong></td><td>Payload includes <code>action: 'edit - view/edit'</code> and <code>inboundRecommenderLogId</code> when prior log exists</td></tr>
                 <tr><td><strong>Late accessories</strong></td><td>If foundation lists load after matches, client re-pairs without API</td></tr>
@@ -1513,23 +1533,25 @@ sequenceDiagram
               <tr><td>3</td><td>Search tab Unbxd caller</td><td>Walk search flow; confirm <code>queryType: search</code></td><td>Not tested — autosuggest fires on Matcher load</td></tr>
               <tr><td>4</td><td><code>NewMatcherAtpSession</code> dedup helpers</td><td>Confirm ATP not duplicated on tab switches</td><td>Partial — single <code>/api/matches</code> on tab return; ATP not re-checked</td></tr>
               <tr><td>5</td><td>CPOS vs D365 cart path</td><td>Verify active flag in target environment</td><td><strong>Not observed</strong> — no <code>cartManagement</code> or <code>createCart</code> in session</td></tr>
-              <tr><td>6</td><td><code>getTryInStoreData</code> after accessories load</td><td>Cold load → confirm chained GET after <code>recommendedAccessories</code> with store ID</td><td><strong>Confirmed</strong> — <code>GET …/getTryInStoreData?productIds=…&amp;storeId=132002</code> (200), chained after accessories</td></tr>
-              <tr><td>7</td><td>Try-in-store toggle + fallback banners</td><td>Complete quiz → toggle try-in-store on Matches; apply Try In-Store filter on PLP</td><td><strong>Partial</strong> — Matches checkbox toggle confirmed (re-slice + <code>updateTopItems</code>); fallback banner not forced (all tryable)</td></tr>
+              <tr><td>6</td><td><code>getTryInStoreData</code> timing</td><td>Cold load on Quiz → Matches → PLP; confirm adjustable-base calls only on those tabs; PLP cards batch via <code>useTryInStoreAvailability</code></td><td><strong>2026-07-24 confirmed</strong> on then-eager path; <strong>2026-08-06 code</strong> is tab-gated — re-validate live</td></tr>
+              <tr><td>7</td><td>Try-in-store toggle + fallback banners</td><td>Complete quiz → toggle try-in-store on Matches; confirm Matches copy; confirm <strong>no</strong> Mattresses PLP fallback banner</td><td><strong>Partial</strong> — Matches toggle confirmed; banner not forced; mattresses PLP banner removed in code</td></tr>
               <tr><td>8</td><td><code>isAvailableTryInStore</code> on matches / top-items</td><td>With <code>enableMatchesBudgetToggleNewDesign</code> on → View Matches and toggle try-in-store; confirm field on both POSTs</td><td><strong>Confirmed</strong> — query <code>enableMatchesBudgetToggleNewDesign=true</code>; body field <code>true</code> on fetch, <code>false</code> after toggle off</td></tr>
               <tr><td>9</td><td>My Store switch side effects</td><td>Switch to legacy store mid V2 edit; switch to new-matcher store with cart; confirm zipCodeSE + tab landing</td><td><strong>Not tested</strong> — hooks added 2026-07-23</td></tr>
               <tr><td>10</td><td>View Matcher session reset</td><td>Land with SSR <code>shouldResetViewMatcherSession</code>; confirm redirect strips recommender log id</td><td><strong>Not tested</strong> — hook added 2026-07-23</td></tr>
+              <tr><td>11</td><td>PDP Spring Cloud <code>tryInStore</code></td><td>Open PDP → confirm Available/Not available follows productDetails <code>tryInStore</code></td><td><strong>Code-confirmed 2026-08-06</strong> — not re-traced on prod</td></tr>
+              <tr><td>12</td><td><code>updateTopItems</code> on cache restore</td><td>Return to Matches without re-quiz → confirm top-items POST still fires</td><td><strong>Code-confirmed 2026-08-06</strong> — not re-traced on prod</td></tr>
             </tbody>
           </table>
         </div>
 
         <h4>Suggested live validation flow (Playwright)</h4>
         <ol>
-          <li>Cold load → note eager shell APIs (include chained <code>getTryInStoreData</code> if store context present).</li>
-          <li>Complete quiz → <strong>View Matches</strong> → confirm <code>POST /api/matches</code> then <code>POST /api/updateTopItems</code> (with <code>isAvailableTryInStore</code> if budget-toggle new design flag is on).</li>
+          <li>Cold load → note eager shell APIs (<strong>expect no</strong> unconditional adjustable-base <code>getTryInStoreData</code> until Quiz/Matches/PLP).</li>
+          <li>Complete quiz → <strong>View Matches</strong> → confirm <code>POST /api/matches</code> then <code>POST /api/updateTopItems</code> (with <code>isAvailableTryInStore</code> if budget-toggle new design flag is on); optional accessories try-in-store GET while on Matches.</li>
           <li>With a non–no-preference budget → confirm <strong>Best Matches / Fits Your Budget</strong> radiogroup; <strong>Fits Your Budget</strong> re-slices without a second <code>/api/matches</code>.</li>
-          <li>Switch to mattresses tab → confirm tRPC <code>getUnbxdResults</code>.</li>
-          <li>Return to matches tab → confirm <strong>no</strong> repeat <code>/api/matches</code> (cache restore).</li>
-          <li>Open PDP → confirm <code>productDetails</code>, <code>productPromos</code>, optional <code>atpCache</code>.</li>
+          <li>Switch to mattresses tab → confirm tRPC <code>getUnbxdResults</code> and card-level <code>getTryInStoreData</code> batches; no mattresses fallback banner.</li>
+          <li>Return to matches tab → confirm <strong>no</strong> repeat <code>/api/matches</code> (cache restore) but <code>updateTopItems</code> may still fire.</li>
+          <li>Open PDP → confirm <code>productDetails</code> (incl. <code>tryInStore</code>), <code>productPromos</code>, optional <code>atpCache</code>.</li>
           <li>Add to cart → confirm CPOS tRPC or <code>POST /api/cartManagement</code>.</li>
           <li>(Optional) Change My Store → confirm <code>zipCodeSE</code> and tab/landing behavior per Phase F.</li>
         </ol>
@@ -1553,7 +1575,7 @@ sequenceDiagram
           <table>
             <thead><tr><th>Phase</th><th>Expected (doc)</th><th>Observed (prod)</th><th>Match?</th></tr></thead>
             <tbody>
-              <tr><td><strong>Matcher load</strong></td><td>Eager shell APIs + chained try-in-store</td><td><code>GET financing</code>, <code>defaultMessaging</code>, <code>recommendedAccessories</code>, <code>accessorySizeMapping</code>, <code>closeststore</code>, <strong><code>getTryInStoreData</code></strong> (×2, storeId=132002), tRPC <code>getWarrantySkus</code>, tRPC <code>getUnbxdResults</code> (autosuggest)</td><td>Yes for shell + try-in-store — still no <code>accessoryMapping</code>, <code>createCart</code>, or <code>cartManagement</code></td></tr>
+              <tr><td><strong>Matcher load</strong></td><td>Eager shell APIs (+ try-in-store if on Quiz/Matches/PLP at capture time)</td><td><code>GET financing</code>, <code>defaultMessaging</code>, <code>recommendedAccessories</code>, <code>accessorySizeMapping</code>, <code>closeststore</code>, <strong><code>getTryInStoreData</code></strong> (×2, storeId=132002 — then-eager path), tRPC <code>getWarrantySkus</code>, tRPC <code>getUnbxdResults</code> (autosuggest)</td><td>Yes for shell + try-in-store — still no <code>accessoryMapping</code>, <code>createCart</code>, or <code>cartManagement</code>. <strong>Re-check after 2026-08-06 tab gating</strong></td></tr>
               <tr><td><strong>Quiz answers</strong></td><td>No API calls</td><td>No matcher API calls while answering Q1–Q6</td><td>Yes</td></tr>
               <tr><td><strong>View Matches</strong></td><td><code>POST /api/matches</code> then <code>POST /api/updateTopItems</code></td><td>Both 200; query included <code>enableMatchesBudgetToggleNewDesign=true</code>; bodies included <code>isAvailableTryInStore: true</code>; then <code>POST /api/atpCache?mattressSize=Queen</code></td><td>Yes</td></tr>
               <tr><td><strong>Try-in-store toggle off</strong></td><td>Re-slice; top-items with flag false; no second matches</td><td><code>POST /api/updateTopItems</code> with <code>isAvailableTryInStore: false</code> only — <strong>no</strong> second <code>/api/matches</code></td><td>Yes</td></tr>
@@ -1643,7 +1665,7 @@ sequenceDiagram
       </section>
 
       <footer>
-        <p>DreamHub Engineering · Mattress Matcher Knowledge Hub · Validated prod <strong>2026-07-24</strong> · Code sync 2026-06-25 / <strong>2026-07-23</strong></p>
+        <p>DreamHub Engineering · Mattress Matcher Knowledge Hub · Validated prod <strong>2026-07-24</strong> · Code sync review <strong>2026-08-06</strong></p>
       </footer>
 
     </article>
