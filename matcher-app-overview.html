@@ -253,9 +253,9 @@
     <p class="deck">An in-store quiz and recommendations experience that helps Sleep Experts guide customers to ranked mattress and foundation pairings — with pricing, financing, delivery, and add-to-cart.</p>
     <div class="byline">
       <div class="byline-item"><strong>Audience</strong>Product owners, QA, engineers</div>
-      <div class="byline-item"><strong>Scope</strong>Matcher master app (~2,202 files)</div>
-      <div class="byline-item"><strong>Validated</strong>2026-07-24 (network/UX); prior UX 2026-06-04</div>
-      <div class="byline-item"><strong>Code sync</strong>Repomix 2026-07-23</div>
+      <div class="byline-item"><strong>Scope</strong>Matcher master app (~2,231 files)</div>
+      <div class="byline-item"><strong>Validated</strong>2026-09-04 (store 072002); prior 2026-08-06, 2026-07-24, 2026-06-04</div>
+      <div class="byline-item"><strong>Code sync</strong>Repomix 2026-09-04</div>
     </div>
   </header>
 
@@ -409,8 +409,8 @@ flowchart TB
           <li><strong>Submit</strong> — <strong>View Matches!</strong> enables at <code>6/6 Answered</code> (no separate Next button).</li>
           <li><strong>Resolve init action</strong> — On Matches tab mount, <code>resolveMatchesInitAction</code> picks one path (mount-only; tab switches do not re-run):
             <ul>
-              <li><strong><code>profile-preload</code></strong> — First View Matcher entry with a prior customer-profile recommender log → hydrate from profile cache, no network</li>
-              <li><strong><code>restore-cache</code></strong> — Session has <code>recommenderLogId</code> and quiz was not just re-submitted → restore from session, no network</li>
+              <li><strong><code>profile-preload</code></strong> — First View Matcher entry with a prior customer-profile recommender log → hydrate from profile cache, no <code>/api/matches</code></li>
+              <li><strong><code>restore-cache</code></strong> — Session has <code>recommenderLogId</code> and quiz was not just re-submitted → restore from session, no <code>/api/matches</code> (may still fire <code>POST /api/updateTopItems</code> on remount / View Matcher restore)</li>
               <li><strong><code>fetch</code></strong> — Fresh quiz submit or no cache/preload → proceed to API</li>
             </ul>
           </li>
@@ -418,7 +418,7 @@ flowchart TB
           <li><strong>Fetch matches</strong> — Client POST to <code>/mattressmatcher/api/matches</code>. See <a href="matcher-matches-api-overview.html">Matches API overview</a> for BFF internals and QA troubleshooting.</li>
           <li><strong>Server processing</strong> — <code>/api/matches</code> → external Matches API (V2) + foundation accessory mappings.</li>
           <li><strong>Map to UI</strong> — <code>mapNewQuizResponseToMatches()</code> → top 3 mattress + base pairings with why-it-works, financing, delivery.</li>
-          <li><strong>Show matches</strong> — Header tabs switch to <strong>post-quiz mode</strong>: <code>matcher quiz</code> | <code>matches</code> | <code>mattresses</code> | <code>foundations</code> | <code>bedding</code>. Matches tab shows <strong>"your customer's Top Matches"</strong>, a <strong>Matcher Summary</strong> narrative, 3 pairings with <strong>Add Both To Cart</strong>, <strong>Pair &amp; save</strong> financing (via <code>useFinancingOffer</code> + config tiers), optional <strong>Available to Try In-Store</strong> checkbox, <strong>Best Matches / Fits Your Budget</strong> radiogroup (when budget preference allows), and <strong>View All Mattress/Foundation Matches</strong> links.</li>
+          <li><strong>Show matches</strong> — Header tabs switch to <strong>post-quiz mode</strong>: <code>matcher quiz</code> | <code>matches</code> | <code>mattresses</code> | <code>foundations</code> | <code>bedding</code>. Matches tab shows <strong>"your customer's Top Matches"</strong>, a <strong>Matcher Summary</strong> narrative, 3 pairings with <strong>Add Both To Cart</strong>, <strong>Pair &amp; save</strong> financing (via <code>useFinancingOffer</code> + config tiers), optional <strong>Available to Try In-Store</strong> checkbox, <strong>Best Matches / Fits Your Budget</strong> radiogroup (only for <strong>Under $1,000</strong> or <strong>$1,000–$1,999</strong>; hidden for <strong>$2,000+</strong> and <strong>No preference</strong>), and <strong>View All Mattress/Foundation Matches</strong> links.</li>
         </ol>
 
         <div class="diagram">
@@ -538,7 +538,7 @@ sequenceDiagram
               <li><strong>"Why this match works for your customer"</strong> — attribute chips (e.g. Cooling, Pressure Relief)</li>
               <li><strong>Add Both To Cart</strong> per pairing; <strong>Pair &amp; save</strong> combined financing (computed client-side via <code>useFinancingOffer</code> from App Config tiers — distinct from page-load <code>GET /api/financing</code>)</li>
               <li><strong>Available to Try In-Store</strong> checkbox — Filters match pairings to in-store-tryable SKUs (often checked by default). Live (2026-07-24): toggle off fires <code>updateTopItems</code> with <code>isAvailableTryInStore: false</code> and does <strong>not</strong> re-call <code>/api/matches</code>. May show a fallback banner when fallback foundation SKUs (D365 IDs starting with <code>F</code>) appear in the active slice — copy: <strong>"No exact matches found. Please see these in-store alternatives."</strong></li>
-              <li><strong>Best Matches / Fits Your Budget</strong> — Radiogroup when quiz budget ≠ no preference and <code>enableMatchesBudgetToggleNewDesign</code> is on (prod <strong>2026-07-24</strong>). Re-slices the same recommendation list (no second matches API call). Hidden for <strong>No preference</strong> budget</li>
+              <li><strong>Best Matches / Fits Your Budget</strong> — Radiogroup when <code>enableMatchesBudgetToggleNewDesign</code> is on <strong>and</strong> quiz budget is <strong>Under $1,000</strong> or <strong>$1,000–$1,999</strong> (<code>showBudgetToggle</code>). Re-slices the same recommendation list (no second matches API call). <strong>Hidden</strong> for <strong>$2,000+</strong> and <strong>No preference</strong></li>
               <li><strong>FirmCare nudge:</strong> <em>"Protect your investment. Protect your sleep. Learn More"</em></li>
               <li><strong>View All Mattress Matches</strong> / <strong>View All Foundation Matches</strong> buttons — when try-in-store is active, Unbxd top-3 + remaining fetches <strong>preserve</strong> the Try In-Store store filter</li>
             </ul>
@@ -723,8 +723,49 @@ sequenceDiagram
               <tr><td>3</td><td><code>isAvailableTryInStore</code> on matches / top-items</td><td>Confirmed</td></tr>
               <tr><td>4</td><td>Try-in-store toggle → top-items only (no second matches)</td><td>Confirmed</td></tr>
               <tr><td>5</td><td>Cache restore on return to Matches</td><td>Confirmed</td></tr>
-              <tr><td>6</td><td>Budget UI = <strong>Best Matches / Fits Your Budget</strong> radiogroup</td><td>Confirmed (hidden for No preference)</td></tr>
+              <tr><td>6</td><td>Budget UI = <strong>Best Matches / Fits Your Budget</strong> radiogroup</td><td>Confirmed for mid budgets; <strong>hidden</strong> for No preference <strong>and</strong> <code>$2,000+</code></td></tr>
               <tr><td>7</td><td>Quiz re-edit sends inbound recommender log</td><td>Confirmed</td></tr>
+              <tr><td>8</td><td>My Store switch / View Matcher reset / add-to-cart</td><td>Not exercised</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>Live site validation (2026-09-04)</h3>
+        <p>Prod store <strong>072002</strong> · SE <strong>149651286</strong>. Details: <a href="matcher-api-triggers.html#validation">matcher-api-triggers.html — Live validation</a>.</p>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>#</th><th>Claim</th><th>Result</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>1</td><td>Quiz cold load fires adjustable-base <code>getTryInStoreData</code></td><td>Confirmed</td></tr>
+              <tr><td>2</td><td>View Matches → <code>/api/matches</code> then <code>updateTopItems</code> (<code>isAvailableTryInStore: true</code>)</td><td>Confirmed</td></tr>
+              <tr><td>3</td><td>Try-in-store off → second <code>updateTopItems</code>, no second matches</td><td>Confirmed (call order)</td></tr>
+              <tr><td>4</td><td>Mattresses PLP → Unbxd + <strong><code>POST /api/outlet</code></strong> + card try-in-store; no fallback banner</td><td>Confirmed</td></tr>
+              <tr><td>5</td><td>Outlet badges when no outlet variants in response</td><td><strong>Absent (expected)</strong></td></tr>
+              <tr><td>6</td><td>Tab return — no repeat <code>/api/matches</code></td><td>Confirmed</td></tr>
+              <tr><td>7</td><td>PDP <code>productDetails</code> + “Available to try in store” (143784P)</td><td>Confirmed</td></tr>
+              <tr><td>8</td><td>Best Matches / Fits Your Budget radiogroup with <code>$2,000+</code> quiz</td><td><strong>Confirmed hidden</strong> (expected — <code>showBudgetToggle</code> excludes <code>2000-plus</code>)</td></tr>
+              <tr><td>9</td><td>My Store switch / View Matcher reset / add-to-cart / outlet badge with inventory</td><td>Not exercised</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>Live site validation (2026-08-06)</h3>
+        <p>Network + try-in-store timing refresh on store <strong>132002</strong>. Details: <a href="matcher-api-triggers.html#validation">matcher-api-triggers.html — Live validation</a>.</p>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>#</th><th>Claim</th><th>Result</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>1</td><td>Quiz cold load still fires adjustable-base <code>getTryInStoreData</code></td><td>Confirmed (Quiz whitelisted)</td></tr>
+              <tr><td>2</td><td>Mattresses PLP card-level <code>getTryInStoreData</code> batches</td><td>Confirmed</td></tr>
+              <tr><td>3</td><td>No mattresses PLP fallback banner (incl. forced Matches-fallback session)</td><td>Confirmed</td></tr>
+              <tr><td>4</td><td>Matches fallback copy (Bed upgrade · Temperature+Pain · Full · Side · Plush · Under $1,000)</td><td><strong>Confirmed</strong> — <em>“No exact matches found. Please see these in-store alternatives ⭐”</em></td></tr>
+              <tr><td>5</td><td>PDP <code>productDetails.tryInStore</code> drives Available/Not available</td><td>Confirmed (144043P <code>true</code>)</td></tr>
+              <tr><td>6</td><td>Tab return — no repeat <code>/api/matches</code></td><td>Confirmed</td></tr>
+              <tr><td>7</td><td><code>updateTopItems</code> on simple tab restore</td><td>Not seen — needs harder remount / View Matcher</td></tr>
               <tr><td>8</td><td>My Store switch / View Matcher reset / add-to-cart</td><td>Not exercised</td></tr>
             </tbody>
           </table>
@@ -766,10 +807,42 @@ sequenceDiagram
           </table>
         </div>
 
-        <p><strong>Not yet live-validated this pass:</strong> Tab-gated / PLP-card <code>getTryInStoreData</code> timing after 2026-08-06; PDP Spring Cloud <code>tryInStore</code>; My Store switch / View Matcher reset / add-to-cart.</p>
+        <p><strong>Not yet live-validated this pass:</strong> My Store switch / View Matcher reset / add-to-cart.</p>
+
+        <h3>2026-09-04</h3>
+        <p>Compared to <code>2026-08-12</code> (~2,208 → ~2,231 files; routed ~833 → ~838). New <strong>outlet tagging</strong> path plus a shared Matches variant resolver:</p>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Area</th><th>What changed</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><strong>Outlet BFF</strong></td><td><code>POST /api/outlet</code> proxies Mulesoft product metadata for outlet variants</td></tr>
+              <tr><td><strong>PLP / Search enrichment</strong></td><td>When <code>enableNewMatcherProductOutletTag</code> is on, Unbxd results get <code>outletVariants</code>; cards use ATP outlet info for an <strong>Outlet</strong> badge (size-aware when a size filter is on)</td></tr>
+              <tr><td><strong>PDP outlet notice</strong></td><td>Handoff from an outlet PLP/Search selection can show an outlet notice; SKUs ending in <code>O</code> block add-to-cart on PDP</td></tr>
+              <tr><td><strong>Matches variant consistency</strong></td><td><code>resolveRecommendedProductVariant</code> — quiz size → API variant → first variant — shared by Matches cards and accessory mapping</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p><strong>Live-validated (2026-09-04, store 072002):</strong> <code>enableNewMatcherProductOutletTag=true</code>; <code>POST /api/outlet</code> after Unbxd on mattresses PLP. <strong>No Outlet badges</strong> when the outlet response has no variants for those products (expected). Badge UI / PDP outlet notice still need a product with outlet inventory.</p>
+
+        <h3>2026-08-12</h3>
+        <p>Compared to <code>2026-08-06</code> (~2,206 → ~2,208 files). <strong>No new routed bucket files</strong> and no new associate-facing flows. Carry-forward from the prior sprint still applies; small helper cleanups only:</p>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Area</th><th>What changed</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><strong>Fallback ID → catalog</strong></td><td><code>toCatalogD365ProductId</code> strips leading <code>F</code> on fallback recommendation IDs so PLP/catalog lookups use the real D365 id (<code>F143076P</code> → <code>143076P</code>)</td></tr>
+              <tr><td><strong>Size mapping</strong></td><td><code>mapMattressSizeToQuizValue</code> normalizes casing / separators (<code>KING</code>, <code>twin_xl</code>) before mapping to quiz values</td></tr>
+              <tr><td><strong>Docs alignment</strong></td><td>Restored clarity that <code>restore-cache</code> skips <code>/api/matches</code> but can still call <code>updateTopItems</code></td></tr>
+            </tbody>
+          </table>
+        </div>
 
         <h3>2026-08-06</h3>
-        <p>Compared to <code>2026-07-23</code> (~2,202 → ~2,206 files). Behavior focus is try-in-store call sites and PLP/Matches consistency:</p>
+        <p>Compared to <code>2026-07-23</code> (~2,202 → ~2,206 files). Behavior focus was try-in-store call sites and PLP/Matches consistency:</p>
         <div class="table-wrap">
           <table>
             <thead>
@@ -788,12 +861,12 @@ sequenceDiagram
 
       <section id="documentation-gaps">
         <h2><span class="section-num">§ 14 — Gaps</span>Documentation gaps</h2>
-        <p>Overlays <code>04</code> and <code>06</code> are still placeholders; overlay <code>05</code> covers matches-init, financing-offer, try-in-store hooks, My Store switch, and View Matcher reset. API trigger timing is in <a href="matcher-api-triggers.html"><strong>matcher-api-triggers.html</strong></a>. Re-validate UX claims against prod after each repomix sync.</p>
+        <p>Overlays <code>04</code> and <code>06</code> are still placeholders; overlay <code>05</code> covers matches-init, financing-offer, try-in-store hooks, <strong>outlet availability</strong> (2026-09-04), My Store switch, and View Matcher reset. Overlay <code>03</code> covers outlet BFF + Matches variant resolver. API trigger timing is in <a href="matcher-api-triggers.html"><strong>matcher-api-triggers.html</strong></a>. Re-validate UX claims against prod after each repomix sync.</p>
       </section>
 
       <footer>
         <span><strong>Maintainer</strong> Matcher knowledge hub — update after sprint sync or prod UX changes</span>
-        <span><strong>Last validated</strong> 2026-07-24 (network/UX); code sync review 2026-08-06</span>
+        <span><strong>Last validated</strong> 2026-09-04 (store 072002); code sync 2026-09-04</span>
       </footer>
 
     </article>

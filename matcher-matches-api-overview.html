@@ -720,7 +720,7 @@
     <div class="byline">
       <div class="byline-item"><strong>Audience</strong>QA, Engineering</div>
       <div class="byline-item"><strong>Scope</strong>New matcher V2 BFF only</div>
-      <div class="byline-item"><strong>Validated</strong>Live prod <strong>2026-07-24</strong> · code · <strong>2026-07-23</strong></div>
+      <div class="byline-item"><strong>Validated</strong>Live prod <strong>2026-09-04</strong> · code · <strong>2026-09-04</strong></div>
       <div class="byline-item"><strong>Maintainer</strong>Matcher Knowledge Hub</div>
     </div>
   </header>
@@ -775,15 +775,15 @@
             <thead><tr><th>Init action</th><th>When</th><th>Network</th></tr></thead>
             <tbody>
               <tr><td><code>skip</code></td><td><code>skipInitialFetch</code> set</td><td>None</td></tr>
-              <tr><td><code>profile-preload</code></td><td>First View Matcher + prior profile log; quiz not just submitted</td><td>None</td></tr>
-              <tr><td><code>restore-cache</code></td><td>Session has <code>recommenderLogId</code>; quiz not just submitted</td><td>None</td></tr>
-              <tr><td><code>fetch</code></td><td>Fresh quiz submit, or no cache/preload</td><td><code>POST /api/matches</code></td></tr>
+              <tr><td><code>profile-preload</code></td><td>First View Matcher + prior profile log; quiz not just submitted</td><td>No <code>/api/matches</code> — hydrate from profile preload</td></tr>
+              <tr><td><code>restore-cache</code></td><td>Session has <code>recommenderLogId</code>; quiz not just submitted</td><td>No <code>/api/matches</code> — may still fire <code>POST /api/updateTopItems</code> (dual-band indices) on remount / View Matcher restore</td></tr>
+              <tr><td><code>fetch</code></td><td>Fresh quiz submit, or no cache/preload</td><td><code>POST /api/matches</code> then <code>POST /api/updateTopItems</code></td></tr>
             </tbody>
           </table>
         </div>
         <div class="aside">
           <h3>QA pitfall</h3>
-          <p>Returning to the Matches tab from PLP with an existing session log often shows <strong>no</strong> <code>/api/matches</code> call — that is expected cache restore, not a broken network. Quiz re-submit always forces <code>fetch</code>.</p>
+          <p>Returning to the Matches tab from PLP with an existing session log often shows <strong>no</strong> <code>/api/matches</code> call — that is expected cache restore, not a broken network. A simple tab switch may also show <strong>no</strong> extra <code>updateTopItems</code>; a harder remount / View Matcher restore is where top-items on restore is more likely. Quiz re-submit always forces <code>fetch</code>.</p>
         </div>
       </section>
 
@@ -928,6 +928,7 @@ sequenceDiagram
 
         <h3>Three cards / index bands</h3>
         <p><code>mapNewQuizResponseToMatches</code> always builds three pairings. Fewer than three products → empty Matches UI despite a 200.</p>
+        <p><strong>Variant pick (2026-09-04):</strong> <code>resolveRecommendedProductVariant</code> chooses quiz size → API-selected variant → first variant so Matches cards and accessory mapping stay on the same mattress when the recommender returns a size fallback.</p>
         <div class="table-wrap">
           <table>
             <thead><tr><th>Flag</th><th>Mode</th><th>Indices (approx.)</th></tr></thead>
@@ -987,7 +988,7 @@ sequenceDiagram
               <tr><td>Body <code>isAvailableTryInStore</code></td><td><code>true</code> on fetch (checkbox default on); <code>false</code> on try-in-store toggle off via <code>updateTopItems</code> only</td></tr>
               <tr><td>Return to Matches from PLP</td><td>No second <code>/api/matches</code> (cache restore)</td></tr>
               <tr><td>Quiz re-edit</td><td><code>action: "edit - view/edit"</code> + <code>inboundRecommenderLogId</code></td></tr>
-              <tr><td>Budget radiogroup</td><td>Shown only when budget ≠ no preference; <strong>Fits Your Budget</strong> re-slices without second matches call</td></tr>
+              <tr><td>Budget radiogroup</td><td>Shown for <strong>Under $1,000</strong> / <strong>$1,000–$1,999</strong> only; <strong>hidden</strong> for <strong>$2,000+</strong> and <strong>No preference</strong>. <strong>Fits Your Budget</strong> re-slices without second matches call</td></tr>
               <tr><td><code>updateTopItems.topItems</code> (flag on)</td><td>Dual-band IDs separated by <code>~</code></td></tr>
             </tbody>
           </table>
@@ -1017,7 +1018,7 @@ sequenceDiagram
             <ul>
               <li><code>budgetValue</code></li>
               <li><code>budgetIndexStart</code></li>
-              <li><code>F…</code> fallback D365 IDs</li>
+              <li><code>F…</code> fallback D365 IDs — <code>toCatalogD365ProductId</code> strips leading <code>F</code> for PLP/catalog lookups</li>
             </ul>
           </div>
         </div>
@@ -1040,7 +1041,7 @@ sequenceDiagram
       </section>
 
       <footer>
-        Matcher Knowledge Hub · Matches API Overview · Live-validated prod 2026-07-24 · Code sync 2026-07-23 · Converted 2026-07-24
+        Matcher Knowledge Hub · Matches API Overview · Live-validated prod 2026-09-04 · Code sync 2026-09-04 · Prior live 2026-08-06 / 2026-07-24
       </footer>
 
     </article>
